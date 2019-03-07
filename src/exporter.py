@@ -50,7 +50,7 @@ def cleanup(args):
 
 def run(args):
     """main thread"""
-    # Retrieve minio access and secret keys
+    # Retrieve cos  access and secret keys
     access_key = get_secret('cos_access_key') if not args.accesskey else args.accesskey
     secret_key = get_secret('cos_secret_key') if not args.secretkey else args.secretkey
 
