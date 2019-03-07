@@ -1,5 +1,5 @@
 # sf-exporter
-Sysflow Exporte
+Sysflow exporter to export Sysflow traces to COS
 
 ## Container
 ```
@@ -9,21 +9,25 @@ Sysflow Exporte
 
 ## Usage
 ```
-usage: exporter.py [-h] [--host HOST] [--port PORT] [--accesskey ACCESSKEY]
-                   [--secretkey SECRETKEY] [--scaninterval SCANINTERVAL]
-                   [--timeout TIMEOUT] [--agemin AGEMIN] [--dir DIR]
-                   [--bucket BUCKET] [--location LOCATION]
+usage: exporter.py [-h] [--cosendpoint COSENDPOINT] [--cosport COSPORT]
+                   [--cosaccesskey COSACCESSKEY] [--cossecretkey COSSECRETKEY]
+                   [--scaninterval SCANINTERVAL] [--timeout TIMEOUT]
+                   [--agemin AGEMIN] [--dir DIR] [--cosbucket COSBUCKET]
+                   [--coslocation COSLOCATION] [--nodename NODENAME]
+                   [--nodeip NODEIP] [--podname PODNAME] [--podip PODIP]
+                   [--podservice PODSERVICE] [--poduuid PODUUID]
 
 sf-exporter: service for watching and uploading monitoring files to object
 store.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --host HOST           cos server address
-  --port PORT           cos server port
-  --accesskey ACCESSKEY
+  --cosendpoint COSENDPOINT
+                        cos server address
+  --cosport COSPORT     cos server port
+  --cosaccesskey COSACCESSKEY
                         cos access key
-  --secretkey SECRETKEY
+  --cossecretkey COSSECRETKEY
                         cos secret key
   --scaninterval SCANINTERVAL
                         interval between scans
@@ -31,6 +35,15 @@ optional arguments:
   --agemin AGEMIN       number of minutes of traces to preserve in case of
                         repeated timeouts
   --dir DIR             data directory
-  --bucket BUCKET       target data bucket
-  --location LOCATION   target data bucket locationr
+  --cosbucket COSBUCKET
+                        target data bucket
+  --coslocation COSLOCATION
+                        target data bucket location
+  --nodename NODENAME   exporter's node name
+  --nodeip NODEIP       exporter's node IP
+  --podname PODNAME     exporter's pod name
+  --podip PODIP         exporter's pod IP
+  --podservice PODSERVICE
+                        exporter's pod service
+  --poduuid PODUUID     exporter's: pod UUID
 ```

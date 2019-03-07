@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker build -t sf-exporter . 
+sudo docker build --pull --force-rm -t sf-exporter . 
