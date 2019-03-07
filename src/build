@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo docker build -t tracecollector . 
+sudo docker build -t sf-exporter . 
