@@ -4,11 +4,11 @@ FROM python:2.7-alpine
 WORKDIR /usr/local/exporter
 
 # sources
-COPY executor.py .
-COPY exporter.py .
+COPY src/executor.py .
+COPY src/exporter.py .
 
 # dependencies
-COPY requirements.txt .
+COPY src/requirements.txt .
 RUN pip install -r requirements.txt
 
 # environment variables
