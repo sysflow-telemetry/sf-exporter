@@ -1,0 +1,6 @@
+#!/bin/bash
+sudo ibmcloud cr login
+sudo docker tag sf-exporter registry.ng.bluemix.net/seccloud/sf-exporter
+sudo docker push registry.ng.bluemix.net/seccloud/sf-exporter
+sudo ibmcloud cr image-list
+
