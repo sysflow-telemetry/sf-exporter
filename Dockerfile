@@ -55,5 +55,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --scaninterval=$INTERVAL --dir=$DIR --bucket=$COS_BUCKET --location=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 

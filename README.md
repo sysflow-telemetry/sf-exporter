@@ -15,7 +15,8 @@ usage: exporter.py [-h] [--cosendpoint COSENDPOINT] [--cosport COSPORT]
                    [--agemin AGEMIN] [--dir DIR] [--cosbucket COSBUCKET]
                    [--coslocation COSLOCATION] [--nodename NODENAME]
                    [--nodeip NODEIP] [--podname PODNAME] [--podip PODIP]
-                   [--podservice PODSERVICE] [--poduuid PODUUID]
+                   [--podservice PODSERVICE] [--podns PODNS]
+                   [--poduuid PODUUID]
 
 sf-exporter: service for watching and uploading monitoring files to object
 store.
@@ -45,5 +46,6 @@ optional arguments:
   --podip PODIP         exporter's pod IP
   --podservice PODSERVICE
                         exporter's pod service
+  --podns PODNS         exporter's pod namespace
   --poduuid PODUUID     exporter's: pod UUID
 ```

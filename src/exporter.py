@@ -89,6 +89,7 @@ def run(args):
                             'x-amz-meta-podname': args.podname, 
                             'x-amz-meta-podip': args.podip, 
                             'x-amz-meta-podservice': args.podservice, 
+                            'x-amz-meta-podns': args.podns, 
                             'x-amz-meta-poduuid': args.poduuid
                             })
                 os.remove(trace)
@@ -120,6 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('--podname', help='exporter\'s pod name', default='')
     parser.add_argument('--podip', help='exporter\'s pod IP', default='')
     parser.add_argument('--podservice', help='exporter\'s pod service', default='')
+    parser.add_argument('--podns', help='exporter\'s pod namespace', default='')
     parser.add_argument('--poduuid', help='exporter\'s: pod UUID', default='')
    
     # parse args and configuration
