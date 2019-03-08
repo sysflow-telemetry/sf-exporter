@@ -1,0 +1,3 @@
+#!/bin/bash
+#https://s3.us-south.objectstorage.softlayer.net
+aws s3api head-object --endpoint-url=$1 --bucket $2 --key $3

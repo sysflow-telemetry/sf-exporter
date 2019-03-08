@@ -1,0 +1,3 @@
+#!/bin/bash
+#https://s3.us-south.objectstorage.softlayer.net
+aws s3 ls --endpoint-url=https://$1 s3://$2
