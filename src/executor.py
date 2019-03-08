@@ -22,5 +22,5 @@ class PeriodicExecutor(threading.Thread):
         self.setDaemon(1)
     def run(self):
         while 1:
-            apply(self.func, self.params)
+            self.func(*self.params)
             time.sleep(self.sleep)
