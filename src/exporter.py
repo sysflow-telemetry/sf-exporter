@@ -79,7 +79,7 @@ def run(args):
         # Upload traces to the server
         try:
             traces = [f for f in files(args.dir)]
-            traces.sort(key=lambda f: int(filter(str.isdigit, f)))
+            traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
             # Upload complete traces, exclude most recent log
             for trace in traces[:-1]:
                 minioClient.fput_object(args.cosbucket, '%s.%s.sf' % (args.nodeip, os.path.basename(trace)), trace, 
@@ -130,11 +130,6 @@ if __name__ == '__main__':
     # setup logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]\t%(message)s')
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
-
-    traces = [f for f in files(args.dir)]
-    traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-    logging.info(traces)
-    sys.exit(0)
 
     try:
         logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.cosendpoint, args.cosport, args.cosbucket, args.scaninterval)
