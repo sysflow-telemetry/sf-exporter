@@ -131,6 +131,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]\t%(message)s')
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
 
+    traces = [f for f in files(args.dir)]
+    traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    logging.info(traces)
+    sys.exit(0)
+
     try:
         logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.cosendpoint, args.cosport, args.cosbucket, args.scaninterval)
         exporter = PeriodicExecutor(args.scaninterval, run, [args])
