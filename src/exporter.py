@@ -110,7 +110,7 @@ if __name__ == '__main__':
     parser.add_argument('--cosport', help='cos server port', default=443)
     parser.add_argument('--cosaccesskey', help='cos access key', default=None)
     parser.add_argument('--cossecretkey', help='cos secret key', default=None)
-    parser.add_argument('--secure', help='indicates if SSL connection', default=True)
+    parser.add_argument('--secure', help='indicates if SSL connection', type=bool, default=True)
     parser.add_argument('--scaninterval', help='interval between scans', type=float, default=1)
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='number of minutes of traces to preserve in case of repeated timeouts', type=float, default=60)
