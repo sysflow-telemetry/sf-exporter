@@ -1,0 +1,25 @@
+os: linux
+dist: xenial
+language: generic
+sudo: required
+services:
+ - docker
+
+before_install:
+ - curl -sL https://ibm.biz/idt-installer | bash
+ - ibmcloud login --apikey ${BX_API_KEY} -r ${BX_REGION}
+ - ibmcloud cr login
+ - docker pull ${CR_CI}/sf-exporter:latest || true
+
+script:
+ - docker build --cache-from ${CR_CI}/sf-exporter:latest -t ${CR_CI}/sf-exporter:latest .
+
+after_success:
+ - docker push ${CR_CI}/sf-exporter:latest 
+
+branches:
+  only:
+  - master
+
+notifications:
+  email: true
