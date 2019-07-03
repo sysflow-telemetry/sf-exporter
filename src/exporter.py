@@ -17,8 +17,6 @@ from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyEx
 from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 from sysflow.reader import FlattenedSFReader
-import sysflow.utils as utils
-from sysflow.objtypes import ObjectTypes, OBJECT_MAP
 from jsonserializable import json_serializable
 
 def str2bool(v):
