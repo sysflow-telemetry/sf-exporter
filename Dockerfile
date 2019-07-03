@@ -15,6 +15,18 @@ RUN apk add --update \
   && rm -rf /var/cache/apk/*
 
 # environment variables
+ARG exporttype=cos
+ENV EXPORT_TYPE=$exporttype
+
+ARG exportformat=avro
+ENV EXPORT_FORMAT=$exportformat
+
+ARG sysloghost=localhost
+ENV SYSLOG_HOST=$sysloghost
+
+ARG syslogport=514
+ENV SYSLOG_PORT=$syslogport
+
 ARG endpoint=localhost
 ENV COS_ENDPOINT=$endpoint
 
@@ -58,5 +70,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportformat=$EXPORT_FORMAT --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 

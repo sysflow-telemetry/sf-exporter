@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #-------------------------------------------------------------------------------
 #
 # Watches for new monitoring files and uploads them to cloud object store
@@ -10,12 +10,15 @@
 #
 #-------------------------------------------------------------------------------
 #
-import logging, argparse, codecs, sys, os, json, time, socket
+import logging, argparse, codecs, sys, os, json, time, socket, json
 from executor import PeriodicExecutor
 from minio import Minio
 from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyExists)
 from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
+from sysflow.reader import FlattenedSFReader
+import sysflow.utils as utils
+from sysflow.objtypes import ObjectTypes, OBJECT_MAP
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -57,9 +60,32 @@ def cleanup(args):
             if c < cutoff:
                 logging.warn('Trace \'%s\' removed before being uploaded to object store', f)
                 os.remove(f)
-
 def run(args):
     """main thread"""
+    if args.exporttype == 'syslog':
+        export_to_syslogger(args)
+    elif args.exporttype == 'cos':
+        export_to_cos(args)
+    else:
+        raise argparse.ArgumentTypeError('Unknown export type.')
+
+def export_to_syslogger(args):
+    """Syslogger export routine"""
+    try:
+        traces = [f for f in files(args.dir)]
+        traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+        # send complete traces, exclude most recent log
+        for trace in traces[:-1]:
+            reader = FlattenedSFReader(trace, False)
+            for r in reader:                      
+                logging.info('%s', json.dumps(r, default=lambda o: o.__dict__ if hasattr(o, '__dict__') else None, sort_keys=True))
+            os.remove(trace)
+            logging.info('Uploaded trace %s', trace)
+    except ResponseError:
+        logging.exception('Caught exception while sending traces to syslogger')
+
+def export_to_cos(args):
+    """COS export routine"""
     # Retrieve cos  access and secret keys
     access_key = get_secret('cos_access_key') if not args.cosaccesskey else args.cosaccesskey
     secret_key = get_secret('cos_secret_key') if not args.cossecretkey else args.cossecretkey
@@ -116,6 +142,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
+    parser.add_argument('--exporttype', help='export type', default='cos', choices=['cos', 'syslog'])
+    parser.add_argument('--exportformat', help='export format', default='avro', choices=['avro', 'json'])
+    parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
+    parser.add_argument('--syslogport', help='syslog UDP port', default='514') 
     parser.add_argument('--cosendpoint', help='cos server address', default='localhost') 
     parser.add_argument('--cosport', help='cos server port', default=443)
     parser.add_argument('--cosaccesskey', help='cos access key', default=None)

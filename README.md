@@ -9,8 +9,11 @@ Sysflow exporter to export Sysflow traces to COS
 
 ## Usage
 ```
-usage: exporter.py [-h] [--cosendpoint COSENDPOINT] [--cosport COSPORT]
-                   [--cosaccesskey COSACCESSKEY] [--cossecretkey COSSECRETKEY]
+usage: exporter.py [-h] [--export_type {cos,syslog}]
+                   [--export_format {avro,json}] [--sysloghost SYSLOGHOST]
+                   [--syslogport SYSLOGPORT] [--cosendpoint COSENDPOINT]
+                   [--cosport COSPORT] [--cosaccesskey COSACCESSKEY]
+                   [--cossecretkey COSSECRETKEY] [--secure [SECURE]]
                    [--scaninterval SCANINTERVAL] [--timeout TIMEOUT]
                    [--agemin AGEMIN] [--dir DIR] [--cosbucket COSBUCKET]
                    [--coslocation COSLOCATION] [--nodename NODENAME]
@@ -23,6 +26,14 @@ store.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --export_type {cos,syslog}
+                        export type
+  --export_format {avro,json}
+                        export format
+  --sysloghost SYSLOGHOST
+                        syslog host address
+  --syslogport SYSLOGPORT
+                        syslog UDP port
   --cosendpoint COSENDPOINT
                         cos server address
   --cosport COSPORT     cos server port
@@ -30,6 +41,7 @@ optional arguments:
                         cos access key
   --cossecretkey COSSECRETKEY
                         cos secret key
+  --secure [SECURE]     indicates if SSL connection
   --scaninterval SCANINTERVAL
                         interval between scans
   --timeout TIMEOUT     connection timeout
