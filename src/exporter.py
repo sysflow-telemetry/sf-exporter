@@ -19,6 +19,7 @@ from urllib3.exceptions import MaxRetryError
 from sysflow.reader import FlattenedSFReader
 import sysflow.utils as utils
 from sysflow.objtypes import ObjectTypes, OBJECT_MAP
+from jsonserializable import json_serializable
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -77,8 +78,8 @@ def export_to_syslogger(args):
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
-            for r in reader:                      
-                logging.info('%s', json.dumps(r, default=lambda o: o.__dict__ if hasattr(o, '__dict__') else None, sort_keys=True))
+            for r in reader:
+                logging.info(json_serializable(r, skip_underscore=False))
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
