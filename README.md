@@ -7,10 +7,15 @@ Sysflow exporter to export Sysflow traces to COS
 ./export (to push to IBM Cloud docker registry)
 ```
 
+## Development
+```
+cd src & pip3 install -r requirements.txr
+cd sfmod & sudo python3 setup.py install
+```
+
 ## Usage
 ```
-usage: exporter.py [-h] [--export_type {cos,syslog}]
-                   [--export_format {avro,json}] [--sysloghost SYSLOGHOST]
+usage: exporter.py [-h] [--exporttype {cos,syslog}] [--sysloghost SYSLOGHOST]
                    [--syslogport SYSLOGPORT] [--cosendpoint COSENDPOINT]
                    [--cosport COSPORT] [--cosaccesskey COSACCESSKEY]
                    [--cossecretkey COSSECRETKEY] [--secure [SECURE]]
@@ -26,10 +31,8 @@ store.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --export_type {cos,syslog}
+  --exporttype {cos,syslog}
                         export type
-  --export_format {avro,json}
-                        export format
   --sysloghost SYSLOGHOST
                         syslog host address
   --syslogport SYSLOGPORT

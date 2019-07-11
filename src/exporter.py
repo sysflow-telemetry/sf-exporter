@@ -17,7 +17,7 @@ from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyEx
 from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 from sysflow.reader import FlattenedSFReader
-from jsonserializable import json_serializable
+from sysflow.formatter import SFFormatter
 from logging.handlers import SysLogHandler
 
 def str2bool(v):
@@ -44,6 +44,16 @@ def get_secret(secret_name):
             return secret_file.read()
     except IOError:
         logging.exception('Caught exception while reading secret \'%s\'', secret_name)
+
+def rsyslog(args, msg):
+    logger = logging.getLogger(args.nodeip + '_sysflow')
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport))
+    fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
+    syslog_handler.setFormatter(fmt)
+    logger.addHandler(syslog_handler)
+    logger.info(msg)
 
 def cleanup(args):
     """cleaup exported traces from local tmpfs""" 
@@ -77,14 +87,8 @@ def export_to_syslogger(args):
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
-            for r in reader:
-                logger = logging.getLogger(args.nodeip + '_sysflow')
-                logger.setLevel(logging.INFO)
-                syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport))
-                formatter = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
-                syslog_handler.setFormatter(formatter)
-                logger.addHandler(syslog_handler)
-                logger.info(json_serializable(r, skip_underscore=False))
+            formatter = SFFormatter(reader)
+            formatter.applyFuncJson(lambda sf: rsyslog(args, sf))
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
@@ -149,9 +153,8 @@ if __name__ == '__main__':
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
     parser.add_argument('--exporttype', help='export type', default='cos', choices=['cos', 'syslog'])
-    parser.add_argument('--exportformat', help='export format', default='avro', choices=['avro', 'json'])
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
-    parser.add_argument('--syslogport', help='syslog UDP port', default='514') 
+    parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
     parser.add_argument('--cosendpoint', help='cos server address', default='localhost') 
     parser.add_argument('--cosport', help='cos server port', default=443)
     parser.add_argument('--cosaccesskey', help='cos access key', default=None)
