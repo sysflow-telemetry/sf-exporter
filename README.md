@@ -6,6 +6,27 @@ Sysflow exporter to export Sysflow traces to COS
 ./build
 ./export (to push to IBM Cloud docker registry)
 ```
+For COS export:
+```
+sudo docker service create --name sf-exporter \
+    -e HOST=10.1.0.159 \
+    -e INTERVAL=1 \
+    --secret minio_access_key \
+    --secret minio_secret_key \
+    --mount type=bind,source=/mnt/data,destination=/mnt/data \
+    sf-exporter:latest
+```
+For remote syslogging:
+```
+sudo docker service create --name sf-exporter \
+    -e SYSLOG_HOST=localhost \
+    -e SYSLOG_PORT=514 \
+    -e NODE_IP=10.1.0.159 \
+    -e INTERVAL=15 \
+    -e DIR=/mnt/data \
+    --mount type=bind,source=/mnt/data,destination=/mnt/data \
+    sf-exporter:latest
+```
 
 ## Development
 ```
