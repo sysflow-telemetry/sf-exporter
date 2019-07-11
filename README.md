@@ -33,7 +33,10 @@ sudo docker service create --name sf-exporter \
 cd src & pip3 install -r requirements.txr
 cd sfmod & sudo python3 setup.py install
 ```
-
+Example run with remote syslogging export:
+```
+./exporter.py --exporttype syslog --sysloghost 127.0.0.1 --syslogport 514 --dir /mnt/data --nodeip canaris --scaninterval 15
+```
 ## Usage
 ```
 usage: exporter.py [-h] [--exporttype {cos,syslog}] [--sysloghost SYSLOGHOST]
