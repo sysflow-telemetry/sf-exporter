@@ -9,8 +9,8 @@ Sysflow exporter to export Sysflow traces to COS
 For COS export:
 ```
 sudo docker service create --name sf-exporter \
-    -e HOST=10.1.0.159 \
-    -e INTERVAL=1 \
+    -e NODE_IP=10.1.0.159 \
+    -e INTERVAL=15 \
     --secret minio_access_key \
     --secret minio_secret_key \
     --mount type=bind,source=/mnt/data,destination=/mnt/data \
