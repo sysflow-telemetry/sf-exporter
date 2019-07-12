@@ -22,6 +22,9 @@ RUN cd sfmod && \
 ARG exporttype=cos
 ENV EXPORT_TYPE=$exporttype
 
+ARG exportfields=
+ENV EXPORT_FIELDS=$exportfields
+
 ARG sysloghost=localhost
 ENV SYSLOG_HOST=$sysloghost
 
@@ -71,5 +74,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 

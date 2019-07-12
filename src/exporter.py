@@ -87,7 +87,7 @@ def export_to_syslogger(args):
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
-            formatter = SFFormatter(reader)
+            formatter = SFFormatter(reader, args.exportfields if args.exportfields is not '' else None)
             formatter.applyFuncJson(lambda sf: rsyslog(args, sf))
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
@@ -153,6 +153,7 @@ if __name__ == '__main__':
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
     parser.add_argument('--exporttype', help='export type', default='cos', choices=['cos', 'syslog'])
+    parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
     parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
     parser.add_argument('--cosendpoint', help='cos server address', default='localhost') 
