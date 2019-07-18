@@ -19,6 +19,8 @@ RUN cd sfmod && \
     python3 setup.py install 
 
 # environment variables
+ENV TZ=UTC
+
 ARG exporttype=cos
 ENV EXPORT_TYPE=$exporttype
 
