@@ -84,11 +84,12 @@ def export_to_syslogger(args):
     try:
         traces = [f for f in files(args.dir)]
         traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+        fields=args.exportfields.split(',') if args.exportfields is not None else None        
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
-            formatter = SFFormatter(reader, args.exportfields if args.exportfields is not '' else None)
-            formatter.applyFuncJson(lambda sf: rsyslog(args, sf))
+            formatter = SFFormatter(reader)
+            formatter.applyFuncJson(lambda sf: rsyslog(args, sf), fields)
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:

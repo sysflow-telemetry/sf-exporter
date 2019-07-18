@@ -222,7 +222,7 @@ class SFFormatter(object):
         _flat_map['cont_type'] = cont.type if cont is not None else ''
         _flat_map['cont_privileged'] = cont.privileged if cont is not None else ''
         
-        if fields is not None: 
+        if fields: 
             od = OrderedDict()
             for k in fields:
                 od[k]=_flat_map[k]
