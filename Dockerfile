@@ -12,7 +12,7 @@ COPY src/sfmod sfmod
 COPY src/requirements.txt .
 RUN apk add --update \
   && pip install --upgrade pip   && pip install --upgrade pip \
-  &&  pip install -r requirements.txt \
+  && pip install -r requirements.txt \
   && rm -rf /var/cache/apk/*
 
 RUN cd sfmod && \
