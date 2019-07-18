@@ -34,7 +34,7 @@ def run(args):
             else:
                 print('Bucket {0} does not exist.'.format(path))
     elif args.input == 'local':
-        for path in paths:
+        for path in args.paths:
             if os.path.isfile(path):
                 sysprint(path, args)
             elif os.path.isdir(path):
