@@ -33,6 +33,9 @@ ENV SYSLOG_HOST=$sysloghost
 ARG syslogport=514
 ENV SYSLOG_PORT=$syslogport
 
+ARG syslogexpint=0.05
+ENV SYSLOG_EXP_INT=$syslogexpint
+
 ARG endpoint=localhost
 ENV COS_ENDPOINT=$endpoint
 
@@ -76,5 +79,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogexpint=$SYSLOG_EXP_INT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 
