@@ -86,7 +86,7 @@ _colwidths = {  'idx': 6,
                 'pproc_create_ts': 8,
                 'fd': 5,
                 'open_flags': 5,
-                'res': 30,
+                'res': 45,
                 'proto': 5,
                 'sport': 5,
                 'dport': 5,
@@ -142,7 +142,7 @@ class SFFormatter(object):
         first = True
 
         for idx, r in enumerate(self.reader):
-            record = self._flatten(*r, fields) 
+            record = self._flatten(*r, fields)
             if showindex:
                 record['idx'] = idx
                 record.move_to_end('idx', last=False)
@@ -164,6 +164,9 @@ class SFFormatter(object):
                print(tabulate(bulkRecs, headers=headers, tablefmt='github'))
            else:
                print(tabulate(bulkRecs, tablefmt='github'))
+
+    #def _filter(self, record, fexp):
+    #    return functools.reduce(lambda: b1, b2: b1 and b2, True, map(lambda c: c in record.values(), fexp))
 
     def _flatten(self, objtype, header, cont, pproc, proc, files, evt, flow, fields):
         _flat_map = OrderedDict()
