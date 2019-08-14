@@ -6,7 +6,7 @@ WORKDIR /usr/local/exporter
 # sources
 COPY src/executor.py .
 COPY src/exporter.py .
-COPY src/sfmod sfmod
+COPY modules/sysflow/py3 sfmod
 
 # dependencies
 COPY src/requirements.txt .
