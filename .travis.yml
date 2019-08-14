@@ -4,8 +4,6 @@ language: generic
 sudo: required
 services:
  - docker
-git:
-  submodules: true
 
 before_install:
  - curl -sL https://ibm.biz/idt-installer | bash
