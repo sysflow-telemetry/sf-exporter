@@ -1,5 +1,5 @@
-# sf-exporter
-Sysflow exporter to export Sysflow traces to COS
+# SysFlow Exporter (sf-exporter repo)
+SysFlow exporter to export SysFlow traces to COS
 
 ## Container
 ```
