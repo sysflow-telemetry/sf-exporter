@@ -1,5 +1,5 @@
 # ignore these files and directories when running docker build
-*/.git
+*/.git*
 */.cache
 .travis*
 build
