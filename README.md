@@ -1,3 +1,7 @@
+[![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/sysflowtelemetry/sf-exporter)](https://hub.docker.com/r/sysflowtelemetry/sf-exporter/builds)
+[![Documentation Status](https://readthedocs.org/projects/sysflow/badge/?version=latest)](https://sysflow.readthedocs.io/en/latest/?badge=latest)
+
+
 # SysFlow Exporter (sf-exporter repo)
 SysFlow exporter to export SysFlow traces to COS
 
