@@ -23,10 +23,10 @@
 sudo docker service create --name sf-exporter \
     -e HOST=10.1.0.159 \
     -e INTERVAL=1 \
-    --secret minio_access_key \
-    --secret minio_secret_key \
+    --secret s3_access_key \
+    --secret s3_secret_key \
     --mount type=bind,source=/mnt/data,destination=/mnt/data \
-    sf-exporter:latest
+    sysflowtelemetry/sf-exporter:latest
 
 # For remote syslogging
 #sudo docker service create --name sf-exporter \
@@ -36,4 +36,4 @@ sudo docker service create --name sf-exporter \
 #    -e INTERVAL=15 \
 #    -e DIR=/mnt/data \
 #    --mount type=bind,source=/mnt/data,destination=/mnt/data \
-#    sf-exporter:latest
+#    sysflowtelemetry/sf-exporter:latest

@@ -94,8 +94,8 @@ def run(args):
     """main thread"""
     if args.exporttype == 'syslog':
         export_to_syslogger(args)
-    elif args.exporttype == 'cos':
-        export_to_cos(args)
+    elif args.exporttype == 's3':
+        export_to_s3(args)
     else:
         raise argparse.ArgumentTypeError('Unknown export type.')
 
@@ -115,14 +115,14 @@ def export_to_syslogger(args):
     except ResponseError:
         logging.exception('Caught exception while sending traces to syslogger')
 
-def export_to_cos(args):
-    """COS export routine"""
-    # Retrieve cos  access and secret keys
-    access_key = get_secret('cos_access_key') if not args.cosaccesskey else args.cosaccesskey
-    secret_key = get_secret('cos_secret_key') if not args.cossecretkey else args.cossecretkey
+def export_to_s3(args):
+    """S3 export routine"""
+    # Retrieve s3  access and secret keys
+    access_key = get_secret('s3_access_key') if not args.s3accesskey else args.s3accesskey
+    secret_key = get_secret('s3_secret_key') if not args.s3secretkey else args.s3secretkey
 
     # Initialize minioClient with an endpoint and access/secret keys.
-    minioClient = Minio('%s:%s' % (args.cosendpoint, args.cosport),
+    minioClient = Minio('%s:%s' % (args.s3endpoint, args.s3port),
 			access_key=access_key,
 			secret_key=secret_key,
 			secure=args.secure)
@@ -130,8 +130,8 @@ def export_to_cos(args):
 
     # Make a bucket with the make_bucket API call.
     try:
-        if not minioClient.bucket_exists(args.cosbucket):
-            minioClient.make_bucket(args.cosbucket, location=args.coslocation)        
+        if not minioClient.bucket_exists(args.s3bucket):
+            minioClient.make_bucket(args.s3bucket, location=args.s3location)        
     except MaxRetryError:
         logging.error('Connection timeout! Removing traces older than %d minutes', args.agemin)
         cleanup(args)
@@ -149,7 +149,7 @@ def export_to_cos(args):
             traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
             # Upload complete traces, exclude most recent log
             for trace in traces[:-1]:
-                minioClient.fput_object(args.cosbucket, '%s.%s.sf' % (args.nodeip, os.path.basename(trace)), trace, 
+                minioClient.fput_object(args.s3bucket, '%s.%s.sf' % (args.nodeip, os.path.basename(trace)), trace, 
                         metadata = { 
                             'x-amz-meta-nodename': args.nodename, 
                             'x-amz-meta-nodeip': args.nodeip, 
@@ -162,7 +162,7 @@ def export_to_cos(args):
                 os.remove(trace)
                 logging.info('Uploaded trace %s', trace)
             # Upload partial trace without removing it
-            #minioClient.fput_object(args.cosbucket, os.path.basename(traces[-1]), traces[-1], metadata={'X-Amz-Meta-Trace': 'partial'})
+            #minioClient.fput_object(args.s3bucket, os.path.basename(traces[-1]), traces[-1], metadata={'X-Amz-Meta-Trace': 'partial'})
             #logging.info('Uploaded trace %s', traces[-1])
         except ResponseError:
             logging.exception('Caught exception while uploading traces to object store')
@@ -173,22 +173,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
-    parser.add_argument('--exporttype', help='export type', default='cos', choices=['cos', 'syslog'])
+    parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog'])
     parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
     parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
     parser.add_argument('--syslogexpint', help='syslog export interval', default=0.05) 
-    parser.add_argument('--cosendpoint', help='cos server address', default='localhost') 
-    parser.add_argument('--cosport', help='cos server port', default=443)
-    parser.add_argument('--cosaccesskey', help='cos access key', default=None)
-    parser.add_argument('--cossecretkey', help='cos secret key', default=None)
+    parser.add_argument('--s3endpoint', help='s3 server address', default='localhost') 
+    parser.add_argument('--s3port', help='s3 server port', default=443)
+    parser.add_argument('--s3accesskey', help='s3 access key', default=None)
+    parser.add_argument('--s3secretkey', help='s3 secret key', default=None)
     parser.add_argument('--secure', help='indicates if SSL connection', type=str2bool, nargs='?', const=True, default=True)
     parser.add_argument('--scaninterval', help='interval between scans', type=float, default=1)
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='number of minutes of traces to preserve in case of repeated timeouts', type=float, default=60)
     parser.add_argument('--dir', help='data directory', default='/mnt/data')
-    parser.add_argument('--cosbucket', help='target data bucket', default='sf-monitoring')
-    parser.add_argument('--coslocation', help='target data bucket location', default='us-south')
+    parser.add_argument('--s3bucket', help='target data bucket', default='sf-monitoring')
+    parser.add_argument('--s3location', help='target data bucket location', default='us-south')
     parser.add_argument('--nodename', help='exporter\'s node name', default='')
     parser.add_argument('--nodeip', help='exporter\'s node IP', default='')
     parser.add_argument('--podname', help='exporter\'s pod name', default='')
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
 
     try:
-        logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.cosendpoint, args.cosport, args.cosbucket, args.scaninterval)
+        logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.s3endpoint, args.s3port, args.s3bucket, args.scaninterval)
         exporter = PeriodicExecutor(args.scaninterval, run, [args])
         exporter.run()
     except:

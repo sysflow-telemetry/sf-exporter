@@ -40,7 +40,7 @@ RUN cd sfmod && \
 # environment variables
 ENV TZ=UTC
 
-ARG exporttype=cos
+ARG exporttype=s3
 ENV EXPORT_TYPE=$exporttype
 
 ARG exportfields=
@@ -56,22 +56,22 @@ ARG syslogexpint=0.05
 ENV SYSLOG_EXP_INT=$syslogexpint
 
 ARG endpoint=localhost
-ENV COS_ENDPOINT=$endpoint
+ENV S3_ENDPOINT=$endpoint
 
 ARG port=9000
-ENV COS_PORT=$port
+ENV S3_PORT=$port
 
 ARG interval=60
 ENV INTERVAL=$interval
 
 ARG bucket=sf-monitoring
-ENV COS_BUCKET=$bucket
+ENV S3_BUCKET=$bucket
 
 ARG dir=/mnt/data
 ENV DIR=$dir
 
 ARG location=us-south
-ENV COS_LOCATION=$location
+ENV S3_LOCATION=$location
 
 ARG secure=True
 ENV SECURE=$secure
@@ -98,5 +98,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogexpint=$SYSLOG_EXP_INT --cosendpoint=$COS_ENDPOINT --cosport=$COS_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --cosbucket=$COS_BUCKET --coslocation=$COS_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogexpint=$SYSLOG_EXP_INT --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 

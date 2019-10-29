@@ -19,4 +19,5 @@
 # limitations under the License.
 
 #https://s3.us-south.objectstorage.softlayer.net
+#helper script to access object metadata in s3
 aws s3api head-object --endpoint-url=$1 --bucket $2 --key $3

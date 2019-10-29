@@ -19,4 +19,5 @@
 # limitations under the License.
 
 #https://s3.us-south.objectstorage.softlayer.net
+#helper script to list objects in an s3 
 aws s3 ls --endpoint-url=https://$1 s3://$2
