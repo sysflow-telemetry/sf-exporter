@@ -5,7 +5,7 @@
 # SysFlow Exporter (sf-exporter repo)
 SysFlow exporter to export SysFlow traces to S3 compliant object stores
 
-##Cloning source
+## Cloning source
 The sf-exporter project has been tested primarily on Ubuntu 16.04 and 18.04. The project will be tested on other flavors of UNIX in the future. This document 
 describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container 
 is the easiest way to start. For convenience, skip the build step and pull pre-built images directly from Docker Hub.
