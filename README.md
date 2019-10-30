@@ -3,7 +3,7 @@
 
 
 # SysFlow Exporter (sf-exporter repo)
-SysFlow exporter to export SysFlow traces to S3 compliant object stores
+SysFlow exporter to export SysFlow traces to S3-compliant object stores and rsyslog servers.
 
 ## Cloning source
 The sf-exporter project has been tested primarily on Ubuntu 16.04 and 18.04. The project will be tested on other flavors of UNIX in the future. This document 
@@ -24,11 +24,11 @@ git submodule update --init --recursive
 
 ## Container
 ```
-./build
+docker build --pull --force-rm -t sf-exporter . 
 ```
 For s3 export:
 ```
-sudo docker service create --name sf-exporter \
+docker service create --name sf-exporter \
     -e NODE_IP=10.1.0.159 \
     -e INTERVAL=15 \
     --secret s3_access_key \
@@ -38,7 +38,7 @@ sudo docker service create --name sf-exporter \
 ```
 For remote syslogging:
 ```
-sudo docker service create --name sf-exporter \
+docker service create --name sf-exporter \
     -e SYSLOG_HOST=localhost \
     -e SYSLOG_PORT=514 \
     -e NODE_IP=10.1.0.159 \
