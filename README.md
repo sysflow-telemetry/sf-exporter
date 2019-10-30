@@ -1,110 +1,56 @@
 [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/sysflowtelemetry/sf-exporter)](https://hub.docker.com/r/sysflowtelemetry/sf-exporter/builds)
+[![Docker Pulls](https://img.shields.io/docker/pulls/sysflowtelemetry/sf-exporter)](https://hub.docker.com/r/sysflowtelemetry/sf-exporter)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/sysflow-telemetry/sf-exporter)
 [![Documentation Status](https://readthedocs.org/projects/sysflow/badge/?version=latest)](https://sysflow.readthedocs.io/en/latest/?badge=latest)
+[![GitHub](https://img.shields.io/github/license/sysflow-telemetry/sf-exporter)](https://github.com/sysflow-telemetry/sf-exporter/blob/master/LICENSE.md)
 
+# Supported tags and respective `Dockerfile` links
 
-# SysFlow Exporter (sf-exporter repo)
-SysFlow exporter to export SysFlow traces to S3-compliant object stores and rsyslog servers.
+-	[`0.1`, `latest`](https://github.com/sysflow-telemetry/sf-exporter/blob/0.1/Dockerfile)
 
-## Cloning source
-The sf-exporter project has been tested primarily on Ubuntu 16.04 and 18.04. The project will be tested on other flavors of UNIX in the future. This document 
-describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container 
-is the easiest way to start. For convenience, skip the build step and pull pre-built images directly from Docker Hub.
+# Quick reference
 
-To build the project, first pull down the source code, with submodules:
+-	**Documentation**:  
+	[the SysFlow Documentation](https://sysflow.readthedocs.io)
+  
+-	**Where to get help**:  
+	[the SysFlow Community Slack](https://join.slack.com/t/sysflow-telemetry/shared_invite/enQtODA5OTA3NjE0MTAzLTlkMGJlZDQzYTc3MzhjMzUwNDExNmYyNWY0NWIwODNjYmRhYWEwNGU0ZmFkNGQ2NzVmYjYxMWFjYTM1MzA5YWQ)
+
+-	**Where to file issues**:  
+	[the github issue tracker](https://github.com/sysflow-telemetry/sf-docs/issues) (include the `sf-exporter` tag)
+
+-	**Source of this description**:  
+	[repo's readme](https://github.com/sysflow-telemetry/sf-exporter/edit/master/README.md) ([history](https://github.com/sysflow-telemetry/sf-exporter/commits/master))
+
+# What is SysFlow?
+
+The SysFlow Telemetry Pipeline is a framework for monitoring cloud workloads and for creating performance and security analytics. The goal of this project is to build all the plumbing required for system telemetry so that users can focus on writing and sharing analytics on a scalable, common open-source platform. The backbone of the telemetry pipeline is a new data format called SysFlow, which lifts raw system event information into an abstraction that describes process behaviors, and their relationships with containers, files, and network. This object-relational format is highly compact, yet it provides broad visibility into container clouds. We have also built several APIs that allow users to process SysFlow with their favorite toolkits. Learn more about SysFlow in the [SysFlow specification document](https://sysflow.readthedocs.io/en/latest/spec.html).
+
+# About This Image
+
+This image packages SysFlow Exporter, which exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV. Please check [sf-exporter usage](https://sysflow.readthedocs.io/en/latest/exporter.html#usage) for complete set of options.
+
+# How to use this image
+
+The easiest way to run the SysFlow exporter is from a Docker container, with host mount for the trace files to export. The following command shows how to run sf-exporter with trace files located in `/mnt/data` on the host.
 
 ```
-git clone --recursive git@github.com:sysflow-telemetry/sf-exporter.git 
-```
-
-To checkout submodules on an already cloned repo:
-
-```
-git submodule update --init --recursive
-```
-
-## Container
-```
-docker build --pull --force-rm -t sf-exporter . 
-```
-For s3 export:
-```
-docker service create --name sf-exporter \
-    -e NODE_IP=10.1.0.159 \
-    -e INTERVAL=15 \
-    --secret s3_access_key \
-    --secret s3_secret_key \
+docker run -d --rm --name sf-exporter \
+    -e S3_ENDPOINT=<ip_address> \
+    -e S3_BUCKET=<bucket_name> \
+    -e S3_ACCESS_KEY=<access_key> \
+    -e S3_SECRET_KEY=<secret_key> \
+    -e NODE_IP=$HOSTNAME \
+    -e INTERVAL=150 \ 
     --mount type=bind,source=/mnt/data,destination=/mnt/data \
-    sf-exporter:latest
+    sysflow-telemetry/sf-exporter
 ```
-For remote syslogging:
-```
-docker service create --name sf-exporter \
-    -e SYSLOG_HOST=localhost \
-    -e SYSLOG_PORT=514 \
-    -e NODE_IP=10.1.0.159 \
-    -e INTERVAL=15 \
-    -e DIR=/mnt/data \
-    --mount type=bind,source=/mnt/data,destination=/mnt/data \
-    sf-exporter:latest
-```
+It's also possible to read S3's keys as docker secrets if running the container as a docker swarm service.  
 
-## Development
-```
-cd src & pip3 install -r requirements.txt
-cd modules/sysflow/py3 & sudo python3 setup.py install
-```
-Example run with remote syslogging export:
-```
-./exporter.py --exporttype syslog --sysloghost 127.0.0.1 --syslogport 514 --dir /mnt/data --nodeip testnode --scaninterval 15
-```
-## Usage
-```
-usage: exporter.py [-h] [--exporttype {s3,syslog}] [--sysloghost SYSLOGHOST]
-                   [--syslogport SYSLOGPORT] [--s3endpoint S3ENDPOINT]
-                   [--s3port S3PORT] [--s3accesskey S3ACCESSKEY]
-                   [--s3secretkey S3SECRETKEY] [--secure [SECURE]]
-                   [--scaninterval SCANINTERVAL] [--timeout TIMEOUT]
-                   [--agemin AGEMIN] [--dir DIR] [--s3bucket S3BUCKET]
-                   [--s3location S3LOCATION] [--nodename NODENAME]
-                   [--nodeip NODEIP] [--podname PODNAME] [--podip PODIP]
-                   [--podservice PODSERVICE] [--podns PODNS]
-                   [--poduuid PODUUID]
+# License
 
-sf-exporter: service for watching and uploading monitoring files to object
-store.
+View [license information](https://github.com/sysflow-telemetry/sf-exporter/blob/master/LICENSE.md) for the software contained in this image.
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --exporttype {s3,syslog}
-                        export type
-  --sysloghost SYSLOGHOST
-                        syslog host address
-  --syslogport SYSLOGPORT
-                        syslog UDP port
-  --s3endpoint S3ENDPOINT
-                        s3 server address
-  --s3port S3PORT     s3 server port
-  --s3accesskey S3ACCESSKEY
-                        s3 access key
-  --s3secretkey S3SECRETKEY
-                        s3 secret key
-  --secure [SECURE]     indicates if SSL connection
-  --scaninterval SCANINTERVAL
-                        interval between scans
-  --timeout TIMEOUT     connection timeout
-  --agemin AGEMIN       number of minutes of traces to preserve in case of
-                        repeated timeouts
-  --dir DIR             data directory
-  --s3bucket S3BUCKET
-                        target data bucket
-  --s3location S3LOCATION
-                        target data bucket location
-  --nodename NODENAME   exporter's node name
-  --nodeip NODEIP       exporter's node IP
-  --podname PODNAME     exporter's pod name
-  --podip PODIP         exporter's pod IP
-  --podservice PODSERVICE
-                        exporter's pod service
-  --podns PODNS         exporter's pod namespace
-  --poduuid PODUUID     exporter's: pod UUID
-```
+As with all Docker images, these likely also contain other software which may be under other licenses (such as Bash, etc from the base distribution, along with any direct or indirect dependencies of the primary software being contained).
+
+As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image complies with any relevant licenses for all software contained within.
