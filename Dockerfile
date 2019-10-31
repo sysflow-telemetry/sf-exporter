@@ -79,8 +79,8 @@ ENV SECURE=$secure
 ARG nodename=
 ENV NODE_NAME=$nodename
 
-ARG nodeip=
-ENV NODE_IP=$nodeip
+ARG exporterid=
+ENV EXPORTER_ID=$exporterid
 
 ARG podname=
 ENV POD_NAME=$podname
@@ -98,5 +98,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogexpint=$SYSLOG_EXP_INT --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$NODE_NAME --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogexpint=$SYSLOG_EXP_INT --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$NODE_NAME --nodeip=$EXPORTER_ID --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
 
