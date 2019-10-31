@@ -60,7 +60,7 @@ def get_secret(secret_name):
     try:
         secrets_dir = '/run/secrets' if not (os.path.isdir('/run/secrets/k8s')) else '/run/secrets/k8s'
         with open('%s/%s' % (secrets_dir, secret_name), 'r') as secret_file:
-            return secret_file.read()
+            return secret_file.read().replace('\n', '')
     except IOError:
         logging.exception('Caught exception while reading secret \'%s\'', secret_name)
 
