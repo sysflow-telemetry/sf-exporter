@@ -42,10 +42,11 @@ docker run -d --rm --name sf-exporter \
     -e S3_SECRET_KEY=<secret_key> \
     -e NODE_IP=$HOSTNAME \
     -e INTERVAL=150 \ 
-    --mount type=bind,source=/mnt/data,destination=/mnt/data \
-    sysflow-telemetry/sf-exporter
+    -v /mnt/data:/mnt/data \
+    sysflowtelemetry/sf-exporter
 ```
-It's also possible to read S3's keys as docker secrets if running the container as a docker swarm service.  
+
+It's also possible to read S3's keys as docker secrets `s3_access_key` and `s3_secret_key`. Remote syslog export is also supported. Instructions for `docker compose` and `helm` deployments are available in [here](https://sysflow.readthedocs.io/en/latest/deploy.html).
 
 # License
 
