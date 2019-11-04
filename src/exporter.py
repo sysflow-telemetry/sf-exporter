@@ -68,7 +68,10 @@ def rsyslog(args, msg):
     logger = logging.getLogger(args.nodeip + '_sysflow')
     logger.setLevel(logging.INFO)
     logger.propagate = False
-    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport))
+    if args.syslogprotocol == 'TCP':
+        syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socket.SOCK_STREAM)
+    else:
+        syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socket.SOCK_DGRAM)
     fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
     syslog_handler.setFormatter(fmt)
     logger.addHandler(syslog_handler)
@@ -176,7 +179,8 @@ if __name__ == '__main__':
     parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog'])
     parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
-    parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
+    parser.add_argument('--syslogport', help='syslog port', type=int, default='514') 
+    parser.add_argument('--syslogprotocol', help='syslog transport protocol (TCP or UDP)', default='TCP')
     parser.add_argument('--syslogexpint', help='syslog export interval', default=0.05) 
     parser.add_argument('--s3endpoint', help='s3 server address', default='localhost') 
     parser.add_argument('--s3port', help='s3 server port', default=443)
