@@ -16,8 +16,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+FROM registry.access.redhat.com/ubi8/ubi
 
-FROM python:3-alpine
+# Install Python environment
+RUN dnf install -y --disableplugin=subscription-manager \
+        python3 \
+        python3-wheel && \
+    mkdir -p /usr/local/lib/python3.6/site-packages && \
+    ln -s /usr/bin/easy_install-3 /usr/bin/easy_install && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    ln -s /usr/bin/pip3 /usr/bin/pip && \
+    dnf -y clean all && rm -rf /var/cache/dnf
 
 # working directory
 WORKDIR /usr/local/exporter
@@ -29,13 +38,9 @@ COPY modules/sysflow/py3 sfmod
 
 # dependencies
 COPY src/requirements.txt .
-RUN apk add --update \
-  && pip install --upgrade pip   && pip install --upgrade pip \
-  && pip install -r requirements.txt \
-  && rm -rf /var/cache/apk/*
-
-RUN cd sfmod && \
-    python3 setup.py install 
+RUN pip install -r requirements.txt && \
+    cd sfmod && \ 
+    easy_install . 
 
 # environment variables
 ENV TZ=UTC
