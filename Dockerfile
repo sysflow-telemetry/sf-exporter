@@ -52,6 +52,9 @@ ENV SYSLOG_HOST=$sysloghost
 ARG syslogport=514
 ENV SYSLOG_PORT=$syslogport
 
+ARG syslogprotocol=TCP
+ENV SYSLOG_PROTOCOL=$syslogprotocol
+
 ARG syslogexpint=0.05
 ENV SYSLOG_EXP_INT=$syslogexpint
 
