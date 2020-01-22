@@ -64,19 +64,25 @@ def get_secret(secret_name):
     except IOError:
         logging.exception('Caught exception while reading secret \'%s\'', secret_name)
 
-def rsyslog(args, msg):
-    logger = logging.getLogger(args.nodeip + '_sysflow')
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
+syslogLogger = None
+def initRsyslog(args):
+    global syslogLogger
+    syslogLogger = logging.getLogger(args.nodeip + '_sysflow')
+    syslogLogger.setLevel(logging.INFO)
+    syslogLogger.propagate = False
     socketType = socket.SOCK_STREAM
     if args.syslogprotocol == 'UDP':
         socketType = socket.SOCK_DGRAM
     syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socketType)
     fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
     syslog_handler.setFormatter(fmt)
-    logger.addHandler(syslog_handler)
-    logger.info(msg)
+    syslogLogger.addHandler(syslog_handler)
+
+def logToRsyslog(msg):
+    global syslogLogger
+    syslogLogger.info(msg)
     sleep(float(args.syslogexpint))
+
 
 def cleanup(args):
     """cleaup exported traces from local tmpfs""" 
@@ -96,6 +102,7 @@ def cleanup(args):
 def run(args):
     """main thread"""
     if args.exporttype == 'syslog':
+        initRsyslog(args)
         export_to_syslogger(args)
     elif args.exporttype == 's3':
         export_to_s3(args)
@@ -112,7 +119,7 @@ def export_to_syslogger(args):
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
             formatter = SFFormatter(reader)
-            formatter.applyFuncJson(lambda sf: rsyslog(args, sf), fields)
+            formatter.applyFuncJson(lambda sf: logToRsyslog(sf), fields)
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
