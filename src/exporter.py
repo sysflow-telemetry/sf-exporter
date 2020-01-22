@@ -68,10 +68,10 @@ def rsyslog(args, msg):
     logger = logging.getLogger(args.nodeip + '_sysflow')
     logger.setLevel(logging.INFO)
     logger.propagate = False
-    if args.syslogprotocol == 'TCP':
-        syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socket.SOCK_STREAM)
-    else:
-        syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socket.SOCK_DGRAM)
+    socketType = socket.SOCK_STREAM
+    if args.syslogprotocol == 'UDP':
+        socketType = socket.SOCK_DGRAM
+    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socketType)
     fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
     syslog_handler.setFormatter(fmt)
     logger.addHandler(syslog_handler)
