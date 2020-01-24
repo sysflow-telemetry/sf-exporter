@@ -39,16 +39,6 @@ from sysflow.reader import FlattenedSFReader
 from sysflow.formatter import SFFormatter
 from logging.handlers import SysLogHandler
 
-def str2bool(v):
-    if isinstance(v, bool):
-       return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
 def files(path):  
     """list files in dir path"""
     for file in os.listdir(path):
@@ -64,16 +54,22 @@ def get_secret(secret_name):
     except IOError:
         logging.exception('Caught exception while reading secret \'%s\'', secret_name)
 
-def rsyslog(args, msg):
+def get_rsyslogger(args):
     logger = logging.getLogger(args.nodeip + '_sysflow')
     logger.setLevel(logging.INFO)
     logger.propagate = False
-    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport))
+    socketType = socket.SOCK_STREAM
+    if args.syslogprotocol == 'UDP':
+        socketType = socket.SOCK_DGRAM
+    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socketType)
     fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
     syslog_handler.setFormatter(fmt)
     logger.addHandler(syslog_handler)
+    return logger
+
+def rsyslog(logger, msg, expint):
     logger.info(msg)
-    sleep(float(args.syslogexpint))
+    sleep(float(expint))
 
 def cleanup(args):
     """cleaup exported traces from local tmpfs""" 
@@ -93,23 +89,24 @@ def cleanup(args):
 def run(args):
     """main thread"""
     if args.exporttype == 'syslog':
-        export_to_syslogger(args)
+        logger = get_rsyslogger(args)
+        export_to_syslogger(args, logger)
     elif args.exporttype == 's3':
         export_to_s3(args)
     else:
         raise argparse.ArgumentTypeError('Unknown export type.')
 
-def export_to_syslogger(args):
+def export_to_syslogger(args, logger):
     """Syslogger export routine"""
     try:
         traces = [f for f in files(args.dir)]
         traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-        fields=args.exportfields.split(',') if args.exportfields is not None else None        
+        fields = args.exportfields.split(',') if not args.exportfields else None 
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
             formatter = SFFormatter(reader)
-            formatter.applyFuncJson(lambda sf: rsyslog(args, sf), fields)
+            formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
@@ -167,6 +164,16 @@ def export_to_s3(args):
         except ResponseError:
             logging.exception('Caught exception while uploading traces to object store')
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 if __name__ == '__main__':
     
     # set command line args
@@ -177,6 +184,7 @@ if __name__ == '__main__':
     parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
     parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
+    parser.add_argument('--syslogprotocol', help='syslog transport protocol', choices=['TCP', 'UDP'], default='TCP')
     parser.add_argument('--syslogexpint', help='syslog export interval', default=0.05) 
     parser.add_argument('--s3endpoint', help='s3 server address', default='localhost') 
     parser.add_argument('--s3port', help='s3 server port', default=443)
@@ -210,5 +218,5 @@ if __name__ == '__main__':
         exporter.run()
     except:
         logging.exception('Error while executing exporter')
-
-    sys.exit(0)
+    else:
+        sys.exit(0)
