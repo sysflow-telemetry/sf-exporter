@@ -101,7 +101,7 @@ def export_to_syslogger(args, logger):
     try:
         traces = [f for f in files(args.dir)]
         traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-        fields = args.exportfields.split(',') if not args.exportfields else None 
+        fields = args.exportfields.split(',') if args.exportfields else None 
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
             reader = FlattenedSFReader(trace, False)
