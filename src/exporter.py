@@ -146,7 +146,7 @@ def export_to_s3(args):
             traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
             # Upload complete traces, exclude most recent log
             for trace in traces[:-1]:
-                minioClient.fput_object(args.s3bucket, '%s.%s.sf' % (args.nodeip, os.path.basename(trace)), trace, 
+                minioClient.fput_object(args.s3bucket, '%s.%s.sf' % (os.path.basename(trace), args.nodeip), trace, 
                         metadata = { 
                             'x-amz-meta-nodename': args.nodename, 
                             'x-amz-meta-nodeip': args.nodeip, 
