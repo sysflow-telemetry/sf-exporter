@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [[UNRELEASED](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc3...HEAD)]
 
-## [[0.1-rc3](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc2...0.1-rc3)] - 2020-01-17
+## [[0.1-rc3](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc2...0.1-rc3)] - 2020-03-17
 
 ### Added
 
