@@ -18,6 +18,20 @@
 # limitations under the License.
 FROM registry.access.redhat.com/ubi8/ubi:8.1-406
 
+ARG VERSION=dev
+ARG RELEASE=dev
+
+# Update Label
+LABEL "name"="Sysflow Exporter"
+LABEL "vendor"="IBM"
+LABEL "version"="${VERSION}"
+LABEL "release"="${RELEASE}"
+LABEL "summary"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "description"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "io.k8s.display-name"="Sysflow Exporter"
+LABEL "io.k8s.description"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+
+
 # Install Python environment
 RUN dnf install -y --disableplugin=subscription-manager \
         python3 \
