@@ -31,6 +31,9 @@ LABEL "description"="Sysflow Exporter exports SysFlow traces to S3-compliant obj
 LABEL "io.k8s.display-name"="Sysflow Exporter"
 LABEL "io.k8s.description"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
 
+# Update License
+RUN mkdir /licenses
+COPY ./LICENSE.md /licenses/
 
 # Install Python environment
 RUN dnf install -y --disableplugin=subscription-manager \
