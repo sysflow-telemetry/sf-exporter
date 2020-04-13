@@ -6,19 +6,18 @@ services:
  - docker
 
 before_install:
- - git submodule update --init --recursive
+ - ./build_scripts/env_init.sh
 
 script:
  - "echo \"Build ${TRAVIS_BRANCH}:$(git rev-parse --short HEAD) Started\""
- - docker build --build-arg VERSION=${TRAVIS_BRANCH} --build-arg RELEASE=$(git rev-parse --short HEAD) -t sf-exporter-runtime .
+ - ./build_scripts/build.sh ${TRAVIS_BRANCH} $(git rev-parse --short HEAD) sf-exporter-runtime
 after_success:
  - echo "Build $(git rev-parse --short HEAD) Passed!"
 after_failure:
  - echo "Build $(git rev-parse --short HEAD) Failed!"
 
 after_script:
- - docker rmi sf-exporter-runtime
- - docker image prune -f
+ - ./build_scripts/cleanup.sh sf-exporter-runtime
 
 branches:
   only:
