@@ -29,6 +29,7 @@
 #-------------------------------------------------------------------------------
 #
 import logging, argparse, codecs, sys, os, json, time, socket, json
+import contextlib
 from time import sleep
 from executor import PeriodicExecutor
 from minio import Minio
@@ -104,9 +105,9 @@ def export_to_syslogger(args, logger):
         fields = args.exportfields.split(',') if args.exportfields else None 
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
-            reader = FlattenedSFReader(trace, False)
-            formatter = SFFormatter(reader)
-            formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
+            with contextlib.closing(FlattenedSFReader(trace, False)) as reader:
+                formatter = SFFormatter(reader)
+                formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
