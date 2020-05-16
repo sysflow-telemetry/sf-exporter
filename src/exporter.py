@@ -87,15 +87,18 @@ def cleanup(args):
             if c < cutoff:
                 logging.warn('Trace \'%s\' removed before being uploaded to object store', f)
                 os.remove(f)
-def run(args):
-    """main thread"""
-    if args.exporttype == 'syslog':
+
+def get_runner(exporttype):
+    """
+    Returns the main logic for main thread. Must be only invoked in starting
+    thread and not reentrantable.
+    """
+    if exporttype == 'syslog':
         logger = get_rsyslogger(args)
-        export_to_syslogger(args, logger)
-    elif args.exporttype == 's3':
-        export_to_s3(args)
-    else:
-        raise argparse.ArgumentTypeError('Unknown export type.')
+        return lambda args: export_to_syslogger(args, logger)
+    elif exporttype == 's3':
+        return export_to_s3
+    raise argparse.ArgumentTypeError('Unknown export type.')
 
 def export_to_syslogger(args, logger):
     """Syslogger export routine"""
@@ -215,7 +218,7 @@ if __name__ == '__main__':
 
     try:
         logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.s3endpoint, args.s3port, args.s3bucket, args.scaninterval)
-        exporter = PeriodicExecutor(args.scaninterval, run, [args])
+        exporter = PeriodicExecutor(args.scaninterval, get_runner(args.exporttype), [args])
         exporter.run()
     except:
         logging.exception('Error while executing exporter')
