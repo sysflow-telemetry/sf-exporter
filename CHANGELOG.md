@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Added labels to exporter image.
-- Added licence to exporter image.
+- Added license to exporter image.
 
 ### Changed
 
