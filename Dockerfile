@@ -16,7 +16,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-FROM registry.access.redhat.com/ubi8/ubi:8.1-406
+ARG UBI_VER=8.2-299
+FROM registry.access.redhat.com/ubi8/ubi:${UBI_VER}
 
 ARG VERSION=dev
 ARG RELEASE=dev
@@ -26,10 +27,10 @@ LABEL "name"="Sysflow Exporter"
 LABEL "vendor"="IBM"
 LABEL "version"="${VERSION}"
 LABEL "release"="${RELEASE}"
-LABEL "summary"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
-LABEL "description"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
-LABEL "io.k8s.display-name"="Sysflow Exporter"
-LABEL "io.k8s.description"="Sysflow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "summary"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "io.k8s.display-name"="SysFlow Exporter"
+LABEL "io.k8s.description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
 
 # Update License
 RUN mkdir /licenses
@@ -37,7 +38,9 @@ COPY ./LICENSE.md /licenses/
 
 # Install Python environment
 RUN dnf install -y --disableplugin=subscription-manager \
+        gcc \
         python3 \
+        python3-devel \
         python3-wheel && \
     mkdir -p /usr/local/lib/python3.6/site-packages && \
     ln -s /usr/bin/easy_install-3 /usr/bin/easy_install && \
@@ -51,13 +54,14 @@ WORKDIR /usr/local/exporter
 # sources
 COPY src/executor.py .
 COPY src/exporter.py .
-COPY modules/sysflow/py3 sfmod
+COPY modules/sysflow/py3 /tmp/build/sfmod
 
 # dependencies
-COPY src/requirements.txt .
-RUN pip install -r requirements.txt && \
+COPY src/requirements.txt /tmp/build
+RUN cd /tmp/build && pip install -r requirements.txt && \
     cd sfmod && \ 
-    easy_install . 
+    easy_install . && \
+    rm -r /tmp/build
 
 # environment variables
 ENV TZ=UTC
