@@ -29,6 +29,7 @@
 #-------------------------------------------------------------------------------
 #
 import logging, argparse, codecs, sys, os, json, time, socket, json
+import contextlib
 from time import sleep
 from executor import PeriodicExecutor
 from minio import Minio
@@ -86,15 +87,18 @@ def cleanup(args):
             if c < cutoff:
                 logging.warn('Trace \'%s\' removed before being uploaded to object store', f)
                 os.remove(f)
-def run(args):
-    """main thread"""
-    if args.exporttype == 'syslog':
+
+def get_runner(exporttype):
+    """
+    Returns the main logic for main thread. Must be only invoked in starting
+    thread and not reentrantable.
+    """
+    if exporttype == 'syslog':
         logger = get_rsyslogger(args)
-        export_to_syslogger(args, logger)
-    elif args.exporttype == 's3':
-        export_to_s3(args)
-    else:
-        raise argparse.ArgumentTypeError('Unknown export type.')
+        return lambda args: export_to_syslogger(args, logger)
+    elif exporttype == 's3':
+        return export_to_s3
+    raise argparse.ArgumentTypeError('Unknown export type.')
 
 def export_to_syslogger(args, logger):
     """Syslogger export routine"""
@@ -104,9 +108,9 @@ def export_to_syslogger(args, logger):
         fields = args.exportfields.split(',') if args.exportfields else None 
         # send complete traces, exclude most recent log
         for trace in traces[:-1]:
-            reader = FlattenedSFReader(trace, False)
-            formatter = SFFormatter(reader)
-            formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
+            with contextlib.closing(FlattenedSFReader(trace, False)) as reader:
+                formatter = SFFormatter(reader)
+                formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
             os.remove(trace)
             logging.info('Uploaded trace %s', trace)
     except ResponseError:
@@ -214,7 +218,7 @@ if __name__ == '__main__':
 
     try:
         logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.s3endpoint, args.s3port, args.s3bucket, args.scaninterval)
-        exporter = PeriodicExecutor(args.scaninterval, run, [args])
+        exporter = PeriodicExecutor(args.scaninterval, get_runner(args.exporttype), [args])
         exporter.run()
     except:
         logging.exception('Error while executing exporter')
