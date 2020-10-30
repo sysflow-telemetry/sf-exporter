@@ -103,6 +103,7 @@ def get_runner(exporttype):
 def export_to_syslogger(args, logger):
     """Syslogger export routine"""
     try:
+        logging.warn('Syslog exporter is depricated. Please use sf-processor for rsyslog export.')
         traces = [f for f in files(args.dir)]
         traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         fields = args.exportfields.split(',') if args.exportfields else None 
@@ -184,7 +185,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
-    parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog'])
+    parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog (depricated)'])
     parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
     parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
     parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
