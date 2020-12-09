@@ -18,16 +18,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-#-------------------------------------------------------------------------------
 #
 # Watches for new monitoring files and uploads them to cloud object store
 #
 # Instructions:
 #      ./exporter -h for help and command line options
 #
-#-------------------------------------------------------------------------------
-#
+
 import logging, argparse, codecs, sys, os, json, time, socket, json
 import contextlib
 from time import sleep
@@ -52,8 +49,10 @@ def get_secret(secret_name):
         secrets_dir = '/run/secrets' if not (os.path.isdir('/run/secrets/k8s')) else '/run/secrets/k8s'
         with open('%s/%s' % (secrets_dir, secret_name), 'r') as secret_file:
             return secret_file.read().replace('\n', '')
+    except FileNotFoundError:
+        logging.error('Secret files not found in %s/%s', secrets_dir, secret_name)
     except IOError:
-        logging.exception('Caught exception while reading secret \'%s\'', secret_name)
+        logging.error('Caught exception while reading secret \'%s\'', secret_name)
 
 def get_rsyslogger(args):
     logger = logging.getLogger(args.nodeip + '_sysflow')
@@ -103,7 +102,7 @@ def get_runner(exporttype):
 def export_to_syslogger(args, logger):
     """Syslogger export routine"""
     try:
-        logging.warn('Syslog exporter is depricated. Please use sf-processor for rsyslog export.')
+        logging.warn('Syslog exporter is depricated and is going to be removed in the next release. Please use sf-processor for rsyslog export.')
         traces = [f for f in files(args.dir)]
         traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         fields = args.exportfields.split(',') if args.exportfields else None 
@@ -143,6 +142,7 @@ def export_to_s3(args):
     except BucketAlreadyExists:
         pass
     except ResponseError:
+        logging.error('Caught exception while checking and creating object store bucket')
         raise
     else:
         # Upload traces to the server
@@ -167,7 +167,7 @@ def export_to_s3(args):
             #minioClient.fput_object(args.s3bucket, os.path.basename(traces[-1]), traces[-1], metadata={'X-Amz-Meta-Trace': 'partial'})
             #logging.info('Uploaded trace %s', traces[-1])
         except ResponseError:
-            logging.exception('Caught exception while uploading traces to object store')
+            logging.error('Caught exception while uploading traces to object store')
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -187,21 +187,21 @@ if __name__ == '__main__':
     )
     parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog (depricated)'])
     parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
-    parser.add_argument('--sysloghost', help='syslog host address', default='localhost') 
-    parser.add_argument('--syslogport', help='syslog UDP port', type=int, default='514') 
-    parser.add_argument('--syslogprotocol', help='syslog transport protocol', choices=['TCP', 'UDP'], default='TCP')
-    parser.add_argument('--syslogexpint', help='syslog export interval', default=0.05) 
+    parser.add_argument('--sysloghost', help='syslog host address (depricated)', default='localhost') 
+    parser.add_argument('--syslogport', help='syslog UDP port (depricated)', type=int, default='514') 
+    parser.add_argument('--syslogprotocol', help='syslog transport protocol (depricated)', choices=['TCP', 'UDP'], default='TCP')
+    parser.add_argument('--syslogexpint', help='syslog export interval (depricated)', default=0.05) 
     parser.add_argument('--s3endpoint', help='s3 server address', default='localhost') 
     parser.add_argument('--s3port', help='s3 server port', default=443)
     parser.add_argument('--s3accesskey', help='s3 access key', default=None)
     parser.add_argument('--s3secretkey', help='s3 secret key', default=None)
+    parser.add_argument('--s3bucket', help='target data bucket', default='sf-monitoring')
+    parser.add_argument('--s3location', help='target data bucket location', default='us-south')
     parser.add_argument('--secure', help='indicates if SSL connection', type=str2bool, nargs='?', const=True, default=True)
     parser.add_argument('--scaninterval', help='interval between scans', type=float, default=1)
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='number of minutes of traces to preserve in case of repeated timeouts', type=float, default=60)
-    parser.add_argument('--dir', help='data directory', default='/mnt/data')
-    parser.add_argument('--s3bucket', help='target data bucket', default='sf-monitoring')
-    parser.add_argument('--s3location', help='target data bucket location', default='us-south')
+    parser.add_argument('--dir', help='data directory', default='/mnt/data')    
     parser.add_argument('--nodename', help='exporter\'s node name', default='')
     parser.add_argument('--nodeip', help='exporter\'s node IP', default='')
     parser.add_argument('--podname', help='exporter\'s pod name', default='')
