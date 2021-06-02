@@ -16,7 +16,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG UBI_VER=8.2-299
+ARG UBI_VER=8.4-203
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VER}
 
 ARG VERSION=dev
@@ -69,21 +69,6 @@ ENV TZ=UTC
 ARG exporttype=s3
 ENV EXPORT_TYPE=$exporttype
 
-ARG exportfields=
-ENV EXPORT_FIELDS=$exportfields
-
-ARG sysloghost=localhost
-ENV SYSLOG_HOST=$sysloghost
-
-ARG syslogport=514
-ENV SYSLOG_PORT=$syslogport
-
-ARG syslogprotocol=TCP
-ENV SYSLOG_PROTOCOL=$syslogprotocol
-
-ARG syslogexpint=0.05
-ENV SYSLOG_EXP_INT=$syslogexpint
-
 ARG endpoint=localhost
 ENV S3_ENDPOINT=$endpoint
 
@@ -98,6 +83,9 @@ ENV S3_BUCKET=$bucket
 
 ARG dir=/mnt/data
 ENV DIR=$dir
+
+ARG todir=/mnt/s3
+ENV TO_DIR=$todir
 
 ARG location=us-south
 ENV S3_LOCATION=$location
@@ -127,5 +115,5 @@ ARG poduuid=
 ENV POD_UUID=$poduuid
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --exportfields=$EXPORT_FIELDS --sysloghost=$SYSLOG_HOST --syslogport=$SYSLOG_PORT --syslogprotocol=$SYSLOG_PROTOCOL --syslogexpint=$SYSLOG_EXP_INT --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR
 

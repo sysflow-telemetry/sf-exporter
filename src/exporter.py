@@ -54,23 +54,6 @@ def get_secret(secret_name):
     except IOError:
         logging.error('Caught exception while reading secret \'%s\'', secret_name)
 
-def get_rsyslogger(args):
-    logger = logging.getLogger(args.nodeip + '_sysflow')
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
-    socketType = socket.SOCK_STREAM
-    if args.syslogprotocol == 'UDP':
-        socketType = socket.SOCK_DGRAM
-    syslog_handler = SysLogHandler(address=(args.sysloghost, args.syslogport), socktype=socketType)
-    fmt = logging.Formatter('%(asctime)s %(name)s %(message)s', datefmt="%b %d %H:%M:%S")
-    syslog_handler.setFormatter(fmt)
-    logger.addHandler(syslog_handler)
-    return logger
-
-def rsyslog(logger, msg, expint):
-    logger.info(msg)
-    sleep(float(expint))
-
 def cleanup(args):
     """cleaup exported traces from local tmpfs""" 
     now = time.time()
@@ -92,29 +75,25 @@ def get_runner(exporttype):
     Returns the main logic for main thread. Must be only invoked in starting
     thread and not reentrantable.
     """
-    if exporttype == 'syslog':
-        logger = get_rsyslogger(args)
-        return lambda args: export_to_syslogger(args, logger)
+    if exporttype == 'local':
+        return local_export
     elif exporttype == 's3':
         return export_to_s3
     raise argparse.ArgumentTypeError('Unknown export type.')
 
-def export_to_syslogger(args, logger):
-    """Syslogger export routine"""
-    try:
-        logging.warn('Syslog exporter is depricated and is going to be removed in the next release. Please use sf-processor for rsyslog export.')
-        traces = [f for f in files(args.dir)]
-        traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-        fields = args.exportfields.split(',') if args.exportfields else None 
-        # send complete traces, exclude most recent log
-        for trace in traces[:-1]:
-            with contextlib.closing(FlattenedSFReader(trace, False)) as reader:
-                formatter = SFFormatter(reader)
-                formatter.applyFuncJson(lambda sf: rsyslog(logger, sf, args.syslogexpint), fields)
-            os.remove(trace)
-            logging.info('Uploaded trace %s', trace)
-    except ResponseError:
-        logging.exception('Caught exception while sending traces to syslogger')
+def local_export(args):
+    traces = [f for f in files(args.dir)]
+    traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    # Upload complete traces, exclude most recent log
+    for trace in traces[:-1]:
+        to = os.path.join(args.todir, os.path.basename(trace))
+        logging.info('Moving file %s to %s', trace, to)
+        try:
+            os.rename(trace, to)
+        except OSError:
+            logging.error('Unable to move the file %s to %s', trace, to)
+            cleanup(args)
+
 
 def export_to_s3(args):
     """S3 export routine"""
@@ -185,12 +164,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='sf-exporter: service for watching and uploading monitoring files to object store.'
     )
-    parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'syslog (depricated)'])
-    parser.add_argument('--exportfields', help='comma-separated list of sysflow fields to be exported (syslog only)', default=None)
-    parser.add_argument('--sysloghost', help='syslog host address (depricated)', default='localhost') 
-    parser.add_argument('--syslogport', help='syslog UDP port (depricated)', type=int, default='514') 
-    parser.add_argument('--syslogprotocol', help='syslog transport protocol (depricated)', choices=['TCP', 'UDP'], default='TCP')
-    parser.add_argument('--syslogexpint', help='syslog export interval (depricated)', default=0.05) 
+    parser.add_argument('--exporttype', help='export type', default='s3', choices=['s3', 'local'])
     parser.add_argument('--s3endpoint', help='s3 server address', default='localhost') 
     parser.add_argument('--s3port', help='s3 server port', default=443)
     parser.add_argument('--s3accesskey', help='s3 access key', default=None)
@@ -202,6 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='number of minutes of traces to preserve in case of repeated timeouts', type=float, default=60)
     parser.add_argument('--dir', help='data directory', default='/mnt/data')    
+    parser.add_argument('--todir', help='data directory', default='/mnt/s3')    
     parser.add_argument('--nodename', help='exporter\'s node name', default='')
     parser.add_argument('--nodeip', help='exporter\'s node IP', default='')
     parser.add_argument('--podname', help='exporter\'s pod name', default='')
@@ -218,7 +193,10 @@ if __name__ == '__main__':
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
 
     try:
-        logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.s3endpoint, args.s3port, args.s3bucket, args.scaninterval)
+        if args.exporttype == 's3':
+            logging.info('Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss', args.s3endpoint, args.s3port, args.s3bucket, args.scaninterval)
+        elif args.exporttype == 'local':
+            logging.info('Running local monitor copy task from %s to %s, scaninterval: %ss', args.dir, args.todir, args.scaninterval)
         exporter = PeriodicExecutor(args.scaninterval, get_runner(args.exporttype), [args])
         exporter.run()
     except:
