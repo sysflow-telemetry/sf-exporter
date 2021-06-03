@@ -27,6 +27,7 @@
 
 import logging, argparse, codecs, sys, os, json, time, socket, json
 import contextlib
+import shutil
 from time import sleep
 from executor import PeriodicExecutor
 from minio import Minio
@@ -35,6 +36,7 @@ from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 from sysflow.reader import FlattenedSFReader
 from sysflow.formatter import SFFormatter
+
 
 def files(path):  
     """list files in dir path"""
@@ -88,7 +90,7 @@ def local_export(args):
         to = os.path.join(args.todir, os.path.basename(trace))
         logging.info('Moving file %s to %s', trace, to)
         try:
-            os.rename(trace, to)
+            shutil.move(trace, to)
         except OSError:
             logging.exception('Unable to move the file %s to %s', trace, to)
             cleanup(args)
