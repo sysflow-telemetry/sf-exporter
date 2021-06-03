@@ -30,12 +30,11 @@ import contextlib
 from time import sleep
 from executor import PeriodicExecutor
 from minio import Minio
-from minio.error import (ResponseError, BucketAlreadyOwnedByYou, BucketAlreadyExists)
+from minio.error import (InvalidResponseError, S3Error)
 from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 from sysflow.reader import FlattenedSFReader
 from sysflow.formatter import SFFormatter
-from logging.handlers import SysLogHandler
 
 def files(path):  
     """list files in dir path"""
@@ -116,13 +115,11 @@ def export_to_s3(args):
         logging.error('Connection timeout! Removing traces older than %d minutes', args.agemin)
         cleanup(args)
         pass
-    except BucketAlreadyOwnedByYou:
-        pass
-    except BucketAlreadyExists:
-        pass
-    except ResponseError:
+    except InvalidResponseError:
         logging.error('Caught exception while checking and creating object store bucket')
         raise
+    except S3Error as exc:
+        logging.error('Caught an S3 exception when trying to create bucket', exc)
     else:
         # Upload traces to the server
         try:
@@ -145,8 +142,10 @@ def export_to_s3(args):
             # Upload partial trace without removing it
             #minioClient.fput_object(args.s3bucket, os.path.basename(traces[-1]), traces[-1], metadata={'X-Amz-Meta-Trace': 'partial'})
             #logging.info('Uploaded trace %s', traces[-1])
-        except ResponseError:
+        except InvalidResponseError:
             logging.error('Caught exception while uploading traces to object store')
+        except S3Error as exc:
+            logging.error('Caught an S3 exception uploading trace to bucket', exc)
 
 def str2bool(v):
     if isinstance(v, bool):
