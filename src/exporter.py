@@ -90,7 +90,7 @@ def local_export(args):
         try:
             os.rename(trace, to)
         except OSError:
-            logging.error('Unable to move the file %s to %s', trace, to)
+            logging.exception('Unable to move the file %s to %s', trace, to)
             cleanup(args)
 
 
