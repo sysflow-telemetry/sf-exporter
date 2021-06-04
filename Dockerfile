@@ -114,6 +114,12 @@ ENV POD_SERVICE_ACCOUNT=$podserviceaccount
 ARG poduuid=
 ENV POD_UUID=$poduuid
 
+ARG clusterid=
+ENV CLUSTER_ID=$clusterid
+
+ARG s3prefix=
+ENV S3_PREFIX=$s3prefix
+
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR
+CMD python ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR --clusterid=$CLUSTER_ID --s3prefix=$S3_PREFIX
 

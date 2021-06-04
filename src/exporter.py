@@ -28,8 +28,9 @@
 import logging, argparse, codecs, sys, os, json, time, socket, json
 import contextlib
 import shutil
-from time import sleep
+from time import (sleep, strftime, gmtime)
 from executor import PeriodicExecutor
+from pathlib import Path
 from minio import Minio
 from minio.error import (InvalidResponseError, S3Error)
 from urllib3 import Timeout
@@ -82,14 +83,36 @@ def get_runner(exporttype):
         return export_to_s3
     raise argparse.ArgumentTypeError('Unknown export type.')
 
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
 def local_export(args):
     traces = [f for f in files(args.dir)]
     traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
     # Upload complete traces, exclude most recent log
     for trace in traces[:-1]:
-        to = os.path.join(args.todir, os.path.basename(trace))
+        epoch = os.path.basename(trace)
+        dirStr = ""
+        if is_int(epoch):
+            dirStr = strftime('%Y/%m/%d', gmtime(int(epoch)))
+        if len(args.nodeip) > 0:
+            dirStr = os.path.join(args.nodeip, dirStr)
+        if len(args.nodename) > 0:
+            dirStr = os.path.join(args.nodename, dirStr)
+        if len(args.clusterid) > 0:
+            dirStr = os.path.join(args.clusterid, dirStr)
+        if len(args.s3prefix) > 0:
+            dirStr = os.path.join(args.s3prefix, dirStr)
+        dirStr = os.path.join(args.todir, dirStr)
+        to = os.path.join(dirStr, epoch)
         logging.info('Moving file %s to %s', trace, to)
         try:
+            Path(dirStr).mkdir(parents=True, exist_ok=True)
             shutil.move(trace, to)
         except OSError:
             logging.exception('Unable to move the file %s to %s', trace, to)
@@ -172,6 +195,7 @@ if __name__ == '__main__':
     parser.add_argument('--s3secretkey', help='s3 secret key', default=None)
     parser.add_argument('--s3bucket', help='target data bucket', default='sf-monitoring')
     parser.add_argument('--s3location', help='target data bucket location', default='us-south')
+    parser.add_argument('--s3prefix', help='exporter\'s: static prefix directory for s3 bucket', default='')
     parser.add_argument('--secure', help='indicates if SSL connection', type=str2bool, nargs='?', const=True, default=True)
     parser.add_argument('--scaninterval', help='interval between scans', type=float, default=1)
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
@@ -185,6 +209,7 @@ if __name__ == '__main__':
     parser.add_argument('--podservice', help='exporter\'s pod service', default='')
     parser.add_argument('--podns', help='exporter\'s pod namespace', default='')
     parser.add_argument('--poduuid', help='exporter\'s: pod UUID', default='')
+    parser.add_argument('--clusterid', help='exporter\'s: cluster ID', default='')
    
     # parse args and configuration
     args = parser.parse_args()
