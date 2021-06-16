@@ -1,29 +1,51 @@
 # SysFlow Exporter (sf-exporter repo)
-SysFlow exporter to export SysFlow traces to S3-compliant object stores and rsyslog servers.
 
-## Cloning source
-The sf-exporter project has been tested primarily on Ubuntu 16.04 and 18.04. The project will be tested on other flavors of UNIX in the future. This document 
-describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container 
+SysFlow exporter to export SysFlow traces to S3-compliant object stores.
+
+> Note: For remote syslogging and other export formats and connectors, check the [SysFlow processor](https://github.com/sysflow-telemetry/sf-processor) project.
+
+## Build
+
+This document describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container 
 is the easiest way to start. For convenience, skip the build step and pull pre-built images directly from Docker Hub.
 
-To build the project, first pull down the source code, with submodules:
+To build the project, first clone the source code, with submodules:
 
-```
+```bash
 git clone --recursive git@github.com:sysflow-telemetry/sf-exporter.git 
 ```
 
 To checkout submodules on an already cloned repo:
 
-```
+```bash
 git submodule update --init --recursive
 ```
 
-## Container
+To build the docker image for the exporter locally, run:
+
+```bash
+docker build -t sf-exporter . 
 ```
-docker build --pull --force-rm -t sf-exporter . 
+
+## Docker usage
+
+The easiest way to run the SysFlow exporter is from a Docker container, with host mount for the trace files to export. The following command shows how to run sf-exporter with trace files located in `/mnt/data` on the host.
+
+```bash
+docker run -d --rm --name sf-exporter \
+    -e S3_ENDPOINT=<ip_address> \
+    -e S3_BUCKET=<bucket_name> \
+    -e S3_ACCESS_KEY=<access_key> \
+    -e S3_SECRET_KEY=<secret_key> \
+    -e NODE_IP=$HOSTNAME \
+    -e INTERVAL=150 \ 
+    -v /mnt/data:/mnt/data \
+    sysflowtelemetry/sf-exporter
 ```
-For s3 export:
-```
+
+It's also possible to read S3's keys as docker secrets `s3_access_key` and `s3_secret_key`. Instructions for `docker compose` and `helm` deployments are available in [here](https://sysflow.readthedocs.io/en/latest/deploy.html).
+
+```bash
 docker service create --name sf-exporter \
     -e NODE_IP=10.1.0.159 \
     -e INTERVAL=15 \
@@ -32,58 +54,51 @@ docker service create --name sf-exporter \
     --mount type=bind,source=/mnt/data,destination=/mnt/data \
     sf-exporter:latest
 ```
-For remote syslogging:
-```
-docker service create --name sf-exporter \
-    -e SYSLOG_HOST=localhost \
-    -e SYSLOG_PORT=514 \
-    -e NODE_IP=10.1.0.159 \
-    -e INTERVAL=15 \
-    -e DIR=/mnt/data \
-    --mount type=bind,source=/mnt/data,destination=/mnt/data \
-    sf-exporter:latest
-```
+
+The exporter is usually executed as a pod or docker-compose service together with the SysFlow collector. The exporter automatically removes exported files from the local filesystem it monitors. See the [SysFlow deployments](https://github.com/sysflow-telemetry/sf-deployments) packages for more information.
 
 ## Development
-```
+
+To build the exporter locally, run:
+
+```bash
 cd src & pip3 install -r requirements.txt
 cd modules/sysflow/py3 & sudo python3 setup.py install
 ```
-Example run with remote syslogging export:
-```
-./exporter.py --exporttype syslog --sysloghost 127.0.0.1 --syslogport 514 --dir /mnt/data --nodeip testnode --scaninterval 15
-```
-## Usage
-```
-usage: exporter.py [-h] [--exporttype {s3,syslog}] [--sysloghost SYSLOGHOST]
-                   [--syslogport SYSLOGPORT] [--s3endpoint S3ENDPOINT]
+
+To run the exporter from the command line:
+
+```bash
+./exporter.py -h
+usage: exporter.py [-h] [--exporttype {s3,local}] [--s3endpoint S3ENDPOINT]
                    [--s3port S3PORT] [--s3accesskey S3ACCESSKEY]
-                   [--s3secretkey S3SECRETKEY] [--secure [SECURE]]
-                   [--scaninterval SCANINTERVAL] [--timeout TIMEOUT]
-                   [--agemin AGEMIN] [--dir DIR] [--s3bucket S3BUCKET]
-                   [--s3location S3LOCATION] [--nodename NODENAME]
-                   [--nodeip NODEIP] [--podname PODNAME] [--podip PODIP]
+                   [--s3secretkey S3SECRETKEY] [--s3bucket S3BUCKET]
+                   [--s3location S3LOCATION] [--s3prefix S3PREFIX]
+                   [--secure [SECURE]] [--scaninterval SCANINTERVAL]
+                   [--timeout TIMEOUT] [--agemin AGEMIN] [--dir DIR]
+                   [--todir TODIR] [--nodename NODENAME] [--nodeip NODEIP]
+                   [--podname PODNAME] [--podip PODIP]
                    [--podservice PODSERVICE] [--podns PODNS]
-                   [--poduuid PODUUID]
+                   [--poduuid PODUUID] [--clusterid CLUSTERID]
 
 sf-exporter: service for watching and uploading monitoring files to object
 store.
 
 optional arguments:
   -h, --help            show this help message and exit
-  --exporttype {s3,syslog}
+  --exporttype {s3,local}
                         export type
-  --sysloghost SYSLOGHOST
-                        syslog host address
-  --syslogport SYSLOGPORT
-                        syslog UDP port
   --s3endpoint S3ENDPOINT
                         s3 server address
-  --s3port S3PORT     s3 server port
+  --s3port S3PORT       s3 server port
   --s3accesskey S3ACCESSKEY
                         s3 access key
   --s3secretkey S3SECRETKEY
                         s3 secret key
+  --s3bucket S3BUCKET   target data bucket
+  --s3location S3LOCATION
+                        target data bucket location
+  --s3prefix S3PREFIX   exporter's: static prefix directory for s3 bucket
   --secure [SECURE]     indicates if SSL connection
   --scaninterval SCANINTERVAL
                         interval between scans
@@ -91,10 +106,7 @@ optional arguments:
   --agemin AGEMIN       number of minutes of traces to preserve in case of
                         repeated timeouts
   --dir DIR             data directory
-  --s3bucket S3BUCKET
-                        target data bucket
-  --s3location S3LOCATION
-                        target data bucket location
+  --todir TODIR         data directory
   --nodename NODENAME   exporter's node name
   --nodeip NODEIP       exporter's node IP
   --podname PODNAME     exporter's pod name
@@ -103,4 +115,6 @@ optional arguments:
                         exporter's pod service
   --podns PODNS         exporter's pod namespace
   --poduuid PODUUID     exporter's: pod UUID
+  --clusterid CLUSTERID
+                        exporter's: cluster ID
 ```
