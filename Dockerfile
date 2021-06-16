@@ -27,10 +27,10 @@ LABEL "name"="Sysflow Exporter"
 LABEL "vendor"="IBM"
 LABEL "version"="${VERSION}"
 LABEL "release"="${RELEASE}"
-LABEL "summary"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
-LABEL "description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "summary"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores."
+LABEL "description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores."
 LABEL "io.k8s.display-name"="SysFlow Exporter"
-LABEL "io.k8s.description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV."
+LABEL "io.k8s.description"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores."
 
 # Update License
 RUN mkdir /licenses
