@@ -26,6 +26,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Bumped base docker image to 8.4-203.1622660121.
+- Bumped version of urllib3 to 1.26.5.
+- Bumped version of minio client to 7.0.3.
 - Updated documentation.
 
 ## [[0.2.2](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.1...0.2.2)] - 2020-12-07
