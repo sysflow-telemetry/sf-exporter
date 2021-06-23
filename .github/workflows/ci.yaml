@@ -94,7 +94,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         env:
           DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_PASS: ${{ secrets.DOCKERHUB_PWD }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           destination_container_repo: ${{ env.DOCKER_REGISTRY_REPOSITORY }}
           provider: dockerhub          
