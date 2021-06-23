@@ -89,12 +89,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-      - - name: Sync
-          uses: ms-jpq/sync-dockerhub-readme@v1
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-            repository: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
-            readme: "./README.md"
+      - name: Sync
+        uses: ms-jpq/sync-dockerhub-readme@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
+          readme: "./README.md"
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
