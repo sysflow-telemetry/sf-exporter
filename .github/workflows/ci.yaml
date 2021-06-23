@@ -21,6 +21,9 @@ on:
       - review_requested
   workflow_dispatch:
     
+env:
+  DOCKER_REGISTRY: sysflowtelemetry  
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -53,8 +56,8 @@ jobs:
         uses: docker/metadata-action@v3
         with:          
           images: |
-            sysflowtelemetry/sf-exporter
-            ghcr.io/${{ github.repository }}             
+            ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
+            ghcr.io/${{ github.repository }}
           tags: |            
             type=edge,branch=master
             type=match,pattern=dev
@@ -86,5 +89,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
+      - - name: Sync
+          uses: ms-jpq/sync-dockerhub-readme@v1
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+            repository: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
+            readme: "./README.md"
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
