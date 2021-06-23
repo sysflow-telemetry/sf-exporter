@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Export objects to path following \<clusterID\>/\<nodeID\>/\<nodeIP\>/Y/m/d/\<fileName\>.
+- Github workflows for CI.
+- Docker image push to GHCR and Dockerhub.
 
 ### Removed
 
