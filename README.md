@@ -28,13 +28,13 @@ The SysFlow Telemetry Pipeline is a framework for monitoring cloud workloads and
 
 # About This Image
 
-This image packages SysFlow Exporter, which exports SysFlow traces to S3-compliant object stores or rsyslog servers in several formats, including Avro, JSON, and CSV. Please check [sf-exporter usage](https://sysflow.readthedocs.io/en/latest/exporter.html#usage) for complete set of options.
+This image packages SysFlow Exporter, which exports SysFlow traces to S3-compliant object stores. Please check [sf-exporter usage](https://sysflow.readthedocs.io/en/latest/exporter.html#usage) for complete set of options.
 
 # How to use this image
 
 The easiest way to run the SysFlow exporter is from a Docker container, with host mount for the trace files to export. The following command shows how to run sf-exporter with trace files located in `/mnt/data` on the host.
 
-```
+```bash
 docker run -d --rm --name sf-exporter \
     -e S3_ENDPOINT=<ip_address> \
     -e S3_BUCKET=<bucket_name> \
@@ -46,7 +46,7 @@ docker run -d --rm --name sf-exporter \
     sysflowtelemetry/sf-exporter
 ```
 
-It's also possible to read S3's keys as docker secrets `s3_access_key` and `s3_secret_key`. Remote syslog export is also supported. Instructions for `docker compose` and `helm` deployments are available in [here](https://sysflow.readthedocs.io/en/latest/deploy.html).
+It's also possible to read S3's keys as docker secrets `s3_access_key` and `s3_secret_key`. Instructions for `docker compose` and `helm` deployments are available in [here](https://sysflow.readthedocs.io/en/latest/deploy.html).
 
 # License
 
