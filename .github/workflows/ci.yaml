@@ -89,12 +89,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-      - name: Sync
-        uses: ms-jpq/sync-dockerhub-readme@v1
+      - name: push README to Dockerhub
+        uses: christian-korneck/update-container-description-action@v1
+        env:
+          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ env.DOCKER_REGISTRY_REPOSITORY }}
-          readme: "./README.md"
+          destination_container_repo: ${{ env.DOCKER_REGISTRY_REPOSITORY }}
+          provider: dockerhub          
+          readme_file: "README.md"      
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
