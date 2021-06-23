@@ -23,8 +23,10 @@ ARG VERSION=dev
 ARG RELEASE=dev
 
 # Update Label
-LABEL "name"="Sysflow Exporter"
-LABEL "vendor"="IBM"
+LABEL "name"="SysFlow Exporter"
+LABEL "vendor"="SysFlow"
+LABEL "maintainer"="The SysFlow team"
+LABEL "documentation"="https://sysflow.readthedocs.io"
 LABEL "version"="${VERSION}"
 LABEL "release"="${RELEASE}"
 LABEL "summary"="The SysFlow Exporter exports SysFlow traces to S3-compliant object stores."
