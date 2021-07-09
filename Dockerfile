@@ -41,13 +41,10 @@ COPY ./LICENSE.md /licenses/
 # Install Python environment
 RUN dnf install -y --disableplugin=subscription-manager \
         gcc \
-        python3 \
-        python3-devel \
-        python3-wheel && \
-    mkdir -p /usr/local/lib/python3.6/site-packages && \
-    ln -s /usr/bin/easy_install-3 /usr/bin/easy_install && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    ln -s /usr/bin/pip3 /usr/bin/pip && \
+        python38 \
+        python38-devel \
+        python38-wheel && \
+    mkdir -p /usr/local/lib/python3.8/site-packages && \    
     dnf -y clean all && rm -rf /var/cache/dnf
 
 # working directory
@@ -60,9 +57,9 @@ COPY modules/sysflow/py3 /tmp/build/sfmod
 
 # dependencies
 COPY src/requirements.txt /tmp/build
-RUN cd /tmp/build && pip install -r requirements.txt && \
+RUN cd /tmp/build && python3 -m pip install -r requirements.txt && \
     cd sfmod && \ 
-    easy_install . && \
+    python3 -m pip install . && \
     rm -r /tmp/build
 
 # environment variables
