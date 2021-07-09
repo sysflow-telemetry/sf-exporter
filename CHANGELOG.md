@@ -13,7 +13,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 > -   **Fixed**: for any bug fixes.
 > -   **Security**: in case of vulnerabilities.
 
-## [[UNRELEASED](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.2...HEAD)]
+## [[UNRELEASED](https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.0...HEAD)]
+
+## [[0.3.0](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.2...0.3.0)] - 2021-07-09
 
 ### Added
 
@@ -23,6 +25,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 
+- Moved away from Dockerhub CI.
 - Removed rsyslog export type (implemented in SysFlow processor).
 
 ### Changed
