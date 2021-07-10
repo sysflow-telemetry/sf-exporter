@@ -44,7 +44,8 @@ RUN dnf install -y --disableplugin=subscription-manager \
         python38 \
         python38-devel \
         python38-wheel && \
-    mkdir -p /usr/local/lib/python3.8/site-packages && \    
+    mkdir -p /usr/local/lib/python3.8/site-packages && \
+    ln -s /usr/bin/python3 /usr/bin/python && \    
     dnf -y clean all && rm -rf /var/cache/dnf
 
 # working directory
@@ -120,4 +121,4 @@ ARG s3prefix=
 ENV S3_PREFIX=$s3prefix
 
 # entrypoint
-CMD python ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR --clusterid=$CLUSTER_ID --s3prefix=$S3_PREFIX
+CMD python3 ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR --clusterid=$CLUSTER_ID --s3prefix=$S3_PREFIX
