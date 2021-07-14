@@ -37,11 +37,15 @@ jobs:
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip          
-          python -m pip install black unimport          
+          python -m pip install black unimport safety bandit        
       - name: Check style
         run: black --check -S -l 120 src/
       - name: Check imports
         run: unimport --check --exclude __init__.py src/
+      - name: Check package vulnerabilities
+        run: safety check -r src/requirements.txt
+      - name: Check code vulnerabilities
+        run: bandit -r src/
   docker:
     needs: lint
     runs-on: ubuntu-latest
