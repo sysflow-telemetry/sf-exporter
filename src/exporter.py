@@ -35,6 +35,8 @@ from minio.error import InvalidResponseError, S3Error
 from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 
+HEALTH = logging.CRITICAL + 10
+
 
 def files(path):
     """list files in dir path"""
@@ -50,13 +52,13 @@ def get_secret(secret_name):
         with open('%s/%s' % (secrets_dir, secret_name), 'r') as secret_file:
             return secret_file.read().replace('\n', '')
     except FileNotFoundError:
-        logging.error('Secret files not found in %s/%s', secrets_dir, secret_name)
+        logging.error('Secret not found in %s/%s', secrets_dir, secret_name)
     except IOError:
         logging.error('Caught exception while reading secret \'%s\'', secret_name)
 
 
 def cleanup(args):
-    """cleaup exported traces from local tmpfs"""
+    """cleanup exported traces from local tmpfs"""
     now = time.time()
     cutoff = now - (args.agemin * 60)
 
@@ -93,8 +95,11 @@ def is_int(s):
 
 
 def local_export(args):
+    """local file copy routine"""
+    # List traces
     traces = [f for f in files(args.dir)]
     traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+
     # Upload complete traces, exclude most recent log
     for trace in traces[:-1]:
         epoch = os.path.basename(trace)
@@ -116,7 +121,7 @@ def local_export(args):
             Path(dirStr).mkdir(parents=True, exist_ok=True)
             shutil.move(trace, to)
         except OSError:
-            logging.exception('Unable to move the file %s to %s', trace, to)
+            logging.exception('Unable to move file %s to %s', trace, to)
             cleanup(args)
 
 
@@ -135,7 +140,7 @@ def export_to_s3(args):
     )
     minioClient._http.connection_pool_kw['timeout'] = Timeout(connect=args.timeout, read=3 * args.timeout)
 
-    # Make a bucket with the make_bucket API call.
+    # Make a bucket with the make_bucket API call
     try:
         if not minioClient.bucket_exists(args.s3bucket):
             minioClient.make_bucket(args.s3bucket, location=args.s3location)
@@ -178,6 +183,47 @@ def export_to_s3(args):
             logging.error('Caught exception while uploading traces to object store')
         except S3Error as exc:
             logging.error('Caught an S3 exception uploading trace to bucket', exc)
+
+
+def run_tests(args):
+    if args.exporttype == 'local':
+        logging.info(
+            'Running local monitor copy task from %s to %s, scaninterval: %ss',
+            args.dir,
+            args.todir,
+            args.scaninterval,
+        )
+        if not os.access(args.dir, os.W_OK):
+            logging.error('Directory %s does not exist or is not writable', args.dir)
+            return False
+        if not os.access(args.todir, os.W_OK):
+            logging.error('Directory %s does not exist or is not writable', args.todir)
+            return False
+        return True
+    elif args.exporttype == 's3':
+        logging.info(
+            'Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss',
+            args.s3endpoint,
+            args.s3port,
+            args.s3bucket,
+            args.scaninterval,
+        )
+        access_key = get_secret('s3_access_key') if not args.s3accesskey else args.s3accesskey
+        secret_key = get_secret('s3_secret_key') if not args.s3secretkey else args.s3secretkey
+        minioClient = Minio(
+            '%s:%s' % (args.s3endpoint, args.s3port),
+            access_key=access_key,
+            secret_key=secret_key,
+            secure=args.secure,
+        )
+        minioClient._http.connection_pool_kw['timeout'] = Timeout(connect=args.timeout, read=3 * args.timeout)
+        try:
+            minioClient.bucket_exists("nonexistingbucket")
+            return True
+        except:
+            logging.error('Object storage is not reachable')
+            return False
+    return False
 
 
 def str2bool(v):
@@ -223,26 +269,18 @@ if __name__ == '__main__':
 
     # setup logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]\t%(message)s')
+    logging.addLevelName(level=HEALTH, levelName='HEALTH')
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
 
     try:
-        if args.exporttype == 's3':
-            logging.info(
-                'Running monitor task with host: %s:%s, bucket: %s, scaninterval: %ss',
-                args.s3endpoint,
-                args.s3port,
-                args.s3bucket,
-                args.scaninterval,
-            )
-        elif args.exporttype == 'local':
-            logging.info(
-                'Running local monitor copy task from %s to %s, scaninterval: %ss',
-                args.dir,
-                args.todir,
-                args.scaninterval,
-            )
-        exporter = PeriodicExecutor(args.scaninterval, get_runner(args.exporttype), [args])
-        exporter.run()
+        if run_tests(args):
+            logging.log(level=HEALTH, msg='Health checks: passed')
+            exporter = PeriodicExecutor(args.scaninterval, get_runner(args.exporttype), [args])
+            exporter.run()
+        else:
+            logging.log(level=HEALTH, msg='Health checks: failed')
+    except KeyboardInterrupt:
+        sys.exit(0)
     except:
         logging.exception('Error while executing exporter')
     else:
