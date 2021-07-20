@@ -94,6 +94,7 @@ jobs:
         id: args
         shell: bash
         run: |
+          echo "##[set-output name=ubi_version;]$(awk -F'=' '/UBI_VERSION/{print $2}' makefile.manifest.inc)"
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/*/})"
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"     
       - name: Build and push
@@ -106,6 +107,7 @@ jobs:
           build-args: |            
             VERSION=${{ steps.args.outputs.branch }}
             RELEASE=${{ steps.args.outputs.sha_short }}
+            UBI_VER=${{ steps.args.outputs.ubi_version }}
       - name: push README to Dockerhub
         uses: christian-korneck/update-container-description-action@v1
         if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
