@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [[UNRELEASED](https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.0...HEAD)]
 
-## Changed
+### Changed
 
 - Update(ubi): Bumped UBI version to 8.4-211.
 
