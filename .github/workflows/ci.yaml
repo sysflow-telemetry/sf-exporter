@@ -147,3 +147,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}          
           prerelease: contains(steps.tag_name.outputs.current_version, '-rc')
           draft: true
+          
