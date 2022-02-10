@@ -36,6 +36,16 @@ from urllib3 import Timeout
 from urllib3.exceptions import MaxRetryError
 
 HEALTH = logging.CRITICAL + 10
+CONT_UPDATE = 'cont-update'
+MOVE_DEL = 'move-del'
+
+
+class S3DataConf:
+    def __init__(self, datadir, s3bucket, mode):
+        self.dir = datadir
+        self.s3bucket = s3bucket
+        self.mode = mode
+        self.fileTimes = {}
 
 
 def files(path):
@@ -140,49 +150,59 @@ def export_to_s3(args):
     )
     minioClient._http.connection_pool_kw['timeout'] = Timeout(connect=args.timeout, read=3 * args.timeout)
 
-    # Make a bucket with the make_bucket API call
-    try:
-        if not minioClient.bucket_exists(args.s3bucket):
-            minioClient.make_bucket(args.s3bucket, location=args.s3location)
-    except MaxRetryError:
-        logging.error('Connection timeout! Removing traces older than %d minutes', args.agemin)
-        cleanup(args)
-        pass
-    except InvalidResponseError:
-        logging.error('Caught exception while checking and creating object store bucket')
-        raise
-    except S3Error as exc:
-        logging.error('Caught an S3 exception when trying to create bucket', exc)
-    else:
-        # Upload traces to the server
+    for conf in args.conf:
+        # Make a bucket with the make_bucket API call
         try:
-            traces = [f for f in files(args.dir)]
-            traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-            # Upload complete traces, exclude most recent log
-            for trace in traces[:-1]:
-                minioClient.fput_object(
-                    args.s3bucket,
-                    '%s.%s.sf' % (os.path.basename(trace), args.nodeip),
-                    trace,
-                    metadata={
-                        'x-amz-meta-nodename': args.nodename,
-                        'x-amz-meta-nodeip': args.nodeip,
-                        'x-amz-meta-podname': args.podname,
-                        'x-amz-meta-podip': args.podip,
-                        'x-amz-meta-podservice': args.podservice,
-                        'x-amz-meta-podns': args.podns,
-                        'x-amz-meta-poduuid': args.poduuid,
-                    },
-                )
-                os.remove(trace)
-                logging.info('Uploaded trace %s', trace)
-            # Upload partial trace without removing it
-            # minioClient.fput_object(args.s3bucket, os.path.basename(traces[-1]), traces[-1], metadata={'X-Amz-Meta-Trace': 'partial'})
-            # logging.info('Uploaded trace %s', traces[-1])
+            if not minioClient.bucket_exists(conf.s3bucket):
+                minioClient.make_bucket(conf.s3bucket, location=args.s3location)
+        except MaxRetryError:
+            logging.error('Connection timeout! Removing traces older than %d minutes', args.agemin)
+            cleanup(args)
+            pass
         except InvalidResponseError:
-            logging.error('Caught exception while uploading traces to object store')
+            logging.error('Caught exception while checking and creating object store bucket')
+            raise
         except S3Error as exc:
-            logging.error('Caught an S3 exception uploading trace to bucket', exc)
+            logging.error('Caught an S3 exception when trying to create bucket', exc)
+        else:
+            # Upload traces to the server
+            try:
+                traces = [f for f in files(conf.dir)]
+                traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+                # Upload complete traces, exclude most recent log
+                for trace in traces[:-1]:
+                    minioClient.fput_object(
+                        conf.s3bucket,
+                        '%s.%s.sf' % (os.path.basename(trace), args.nodeip),
+                        trace,
+                        metadata={
+                            'x-amz-meta-nodename': args.nodename,
+                            'x-amz-meta-nodeip': args.nodeip,
+                            'x-amz-meta-podname': args.podname,
+                            'x-amz-meta-podip': args.podip,
+                            'x-amz-meta-podservice': args.podservice,
+                            'x-amz-meta-podns': args.podns,
+                            'x-amz-meta-poduuid': args.poduuid,
+                        },
+                    )
+                    os.remove(trace)
+                    logging.info('Uploaded trace %s', trace)
+                if conf.mode == CONT_UPDATE and len(traces) > 0:
+                    # Upload partial trace without removing it
+                    tr = traces[-1]
+                    moddate = os.stat(tr)[8]
+                    if tr in conf.fileTimes and moddate == conf.fileTimes[tr]:
+                        continue
+                    else:
+                        conf.fileTimes = {tr: moddate}
+                    minioClient.fput_object(
+                        conf.s3bucket, os.path.basename(tr), tr, metadata={'X-Amz-Meta-Trace': 'partial'}
+                    )
+                    logging.info('Uploaded partial trace %s', tr)
+            except InvalidResponseError:
+                logging.error('Caught exception while uploading traces to object store')
+            except S3Error as exc:
+                logging.error('Caught an S3 exception uploading trace to bucket', exc)
 
 
 def run_tests(args):
@@ -237,6 +257,34 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
+def verify_args(args):
+    confs = None
+    if args.exporttype == 's3':
+        dirs = args.dir.split(',')
+        buckets = args.s3bucket.split(',')
+        modes = args.mode.split(',')
+        if len(dirs) != len(buckets) and len(dirs) != len(modes):
+            logging.error(
+                'The number of s3buckets must equal the number of data directories and the number of modes, when using the s3 export type'
+            )
+            sys.exit(1)
+        i = 0
+        confs = []
+        for d in dirs:
+            s3Conf = S3DataConf(d.strip(), buckets[i].strip(), modes[i].strip())
+            if s3Conf.mode != MOVE_DEL and s3Conf.mode != CONT_UPDATE:
+                logging.error(
+                    'S3 export mode must be set to {0} or {1}. Mode: {2} is not an option'.format(
+                        MOVE_DEL, CONT_UPDATE, s3Conf.mode
+                    )
+                )
+                sys.exit(1)
+            logging.info('Data Dir: {0} to Bucket: {1} with Mode: {2}'.format(s3Conf.dir, s3Conf.s3bucket, s3Conf.mode))
+            i = i + 1
+            confs.append(s3Conf)
+    return confs
+
+
 if __name__ == '__main__':
 
     # set command line args
@@ -246,14 +294,25 @@ if __name__ == '__main__':
     parser.add_argument('--s3port', help='s3 server port', default=443)
     parser.add_argument('--s3accesskey', help='s3 access key', default=None)
     parser.add_argument('--s3secretkey', help='s3 secret key', default=None)
-    parser.add_argument('--s3bucket', help='target data bucket', default='telemetry')
+    parser.add_argument(
+        '--s3bucket', help='target data bucket(s) comma delimited. number must match data dirs', default='telemetry'
+    )
     parser.add_argument('--s3location', help='target data bucket location', default='us-south')
     parser.add_argument('--s3prefix', help='s3 bucket prefix', default='')
     parser.add_argument('--secure', help='enables SSL connection', type=str2bool, nargs='?', const=True, default=True)
     parser.add_argument('--scaninterval', help='interval between scans', type=float, default=1)
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='age in minutes to keep in case of repeated timeouts', type=float, default=60)
-    parser.add_argument('--dir', help='data directory', default='/mnt/data')
+    parser.add_argument(
+        '--dir', help='data directory(s) comma delimited. number must match s3buckets', default='/mnt/data'
+    )
+    parser.add_argument(
+        '--mode',
+        help='copy modes ({0}, {1}) comma delimited. number must match buckets, data dirs'.format(
+            MOVE_DEL, CONT_UPDATE
+        ),
+        default=MOVE_DEL,
+    )
     parser.add_argument('--todir', help='data directory', default='/mnt/s3')
     parser.add_argument('--nodename', help='exporter\'s node name', default='')
     parser.add_argument('--nodeip', help='exporter\'s node IP', default='')
@@ -271,6 +330,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]\t%(message)s')
     logging.addLevelName(level=HEALTH, levelName='HEALTH')
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
+    conf = verify_args(args)
+    args.conf = conf
 
     try:
         if run_tests(args):
