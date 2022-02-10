@@ -14,4 +14,4 @@ all: docker-build
 
 .PHONY: docker-build
 docker-build:
-	docker build -t sf-exporter --build-arg UBI_VER=$(UBI_VERSION) -f Dockerfile .
+	docker build -t sysflowtelemetry/sf-exporter --build-arg UBI_VER=$(UBI_VERSION) -f Dockerfile .

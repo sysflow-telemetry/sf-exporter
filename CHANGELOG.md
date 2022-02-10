@@ -13,13 +13,29 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 > -   **Fixed**: for any bug fixes.
 > -   **Security**: in case of vulnerabilities.
 
-## [[UNRELEASED](https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.0...HEAD)]
+## [Unreleased]
+
+## [0.4.0] - 2022-02-18
+
+### Added
+
+- Added ability to export from multiple directories to multiple S3 buckets
+- Added the --mode flag, which changes exporter copying behavior
+
+### Changed
+
+- Bumped minio version to 7.1.3
+- Bumped UBI version to 8.5-226
+
+### Fixed
+
+## [0.3.1] - 2021-09-29
 
 ### Changed
 
 - Update(ubi): Bumped UBI version to 8.4-211.
 
-## [[0.3.0](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.2...0.3.0)] - 2021-09-20
+## [0.3.0] - 2021-09-20
 
 ### Added
 
@@ -39,7 +55,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Bumped version of minio client to 7.0.3.
 - Updated documentation.
 
-## [[0.2.2](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.1...0.2.2)] - 2020-12-07
+## [0.2.2] - 2020-12-07
 
 ### Changed
 
@@ -47,26 +63,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated to use latest SysFlow APIs.
 
 
-## [[0.2.1](https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.0...0.2.1)] - 2020-12-02
+## [0.2.1] - 2020-12-02
 
 ### Changed
 
 - Updated to use latest SysFlow APIs.
 
 
-## [[0.2.0](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1.0...0.2.0)] - 2020-12-01
+## [0.2.0] - 2020-12-01
 
 ### Changed
 
 - Updated to use latest SysFlow APIs.
 
-## [[0.1.0](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc4...0.1.0)] - 2020-10-30
+## [0.1.0] - 2020-10-30
 
 ### Changed
 
 - syslog export type depricated; use `sf-processor` instead.
 
-## [[0.1.0-rc4](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc3...0.1.0-rc4)] - 2020-08-10
+## [0.1.0-rc4] - 2020-08-10
 
 ### Added
 
@@ -81,7 +97,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Increased `sf-exporter` version to the latest release candidate 0.1-rc4.
 
 
-## [[0.1-rc3](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc2...0.1-rc3)] - 2020-03-17
+## [0.1-rc3] - 2020-03-17
 
 ### Added
 
@@ -99,7 +115,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - Fixed issue in fields command option parsing.
 
-## [[0.1-rc2](https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc1...0.1-rc2)] - 2019-11-08
+## [0.1-rc2] - 2019-11-08
 
 ### Changed
 
@@ -110,3 +126,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - First release candidate.
+
+[Unreleased]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.4.0-rc1...HEAD
+[0.4.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.1...0.4.0-rc1
+[0.3.1]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.0...0.3.1
+[0.3.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.2...0.3.0
+[0.2.2]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.1...0.2.2
+[0.2.1]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.0...0.2.1
+[0.2.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.1.0...0.2.0
+[0.1.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.1.0-rc4...0.1.0
+[0.1.0-rc4]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc3...0.1.0-rc4
+[0.1-rc3]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc2...0.1-rc3
+[0.1-rc2]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.1-rc1...0.1-rc2
+[0.1-rc1]: https://github.com/sysflow-telemetry/sf-exporter/releases/tag/0.1-rc1
