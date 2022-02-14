@@ -103,6 +103,21 @@ def is_int(s):
     except ValueError:
         return False
 
+def get_directory(args, trace):
+    epoch = os.path.basename(trace)
+    dirStr = ""
+    if is_int(epoch):
+        dirStr = strftime('%Y/%m/%d', gmtime(int(epoch)))
+    if len(args.nodeip) > 0:
+        dirStr = os.path.join(args.nodeip, dirStr)
+    if len(args.nodename) > 0:
+        dirStr = os.path.join(args.nodename, dirStr)
+    if len(args.clusterid) > 0:
+        dirStr = os.path.join(args.clusterid, dirStr)
+    if len(args.s3prefix) > 0:
+        dirStr = os.path.join(args.s3prefix, dirStr)
+    return dirStr
+
 
 def local_export(args):
     """local file copy routine"""
@@ -112,18 +127,7 @@ def local_export(args):
 
     # Upload complete traces, exclude most recent log
     for trace in traces[:-1]:
-        epoch = os.path.basename(trace)
-        dirStr = ""
-        if is_int(epoch):
-            dirStr = strftime('%Y/%m/%d', gmtime(int(epoch)))
-        if len(args.nodeip) > 0:
-            dirStr = os.path.join(args.nodeip, dirStr)
-        if len(args.nodename) > 0:
-            dirStr = os.path.join(args.nodename, dirStr)
-        if len(args.clusterid) > 0:
-            dirStr = os.path.join(args.clusterid, dirStr)
-        if len(args.s3prefix) > 0:
-            dirStr = os.path.join(args.s3prefix, dirStr)
+        dirStr = get_directory(args, trace)
         dirStr = os.path.join(args.todir, dirStr)
         to = os.path.join(dirStr, epoch)
         logging.info('Moving file %s to %s', trace, to)
@@ -171,9 +175,10 @@ def export_to_s3(args):
                 traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
                 # Upload complete traces, exclude most recent log
                 for trace in traces[:-1]:
+                    dirStr = get_directory(args, trace)
                     minioClient.fput_object(
                         conf.s3bucket,
-                        '%s.%s.sf' % (os.path.basename(trace), args.nodeip),
+                        '%s/%s.%s.sf' % (dirStr, os.path.basename(trace), args.nodeip),
                         trace,
                         metadata={
                             'x-amz-meta-nodename': args.nodename,
