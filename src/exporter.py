@@ -27,6 +27,7 @@
 
 import logging, argparse, sys, os, time
 import shutil
+from datetime import datetime, timezone, timedelta
 from time import strftime, gmtime
 from executor import PeriodicExecutor
 from pathlib import Path
@@ -38,6 +39,7 @@ from urllib3.exceptions import MaxRetryError
 HEALTH = logging.CRITICAL + 10
 CONT_UPDATE = 'cont-update'
 MOVE_DEL = 'move-del'
+CONT_UPDATE_RECURSIVE = 'cont-update-recur'
 
 
 class S3DataConf:
@@ -84,6 +86,22 @@ def cleanup(args):
                 os.remove(f)
 
 
+def cleanup_s3(args, conf):
+    """cleanup exported traces from local tmpfs"""
+    now = time.time()
+    cutoff = now - (args.agemin * 60)
+
+    for root, dirs, files in os.walk(conf.dir, topdown=False):
+        for name in files:
+            fullpath = os.path.join(root, name)
+            t = os.stat(fullpath)
+            c = t.st_ctime
+            # delete file if older than agemin
+            if c < cutoff:
+                logging.warn('Trace \'%s\' removed before being uploaded to object store', fullpath)
+                os.remove(fullpath)
+
+
 def get_runner(exporttype):
     """
     Returns the main logic for main thread. Must be only invoked in starting
@@ -102,6 +120,7 @@ def is_int(s):
         return True
     except ValueError:
         return False
+
 
 def get_directory(args, trace):
     epoch = os.path.basename(trace)
@@ -139,6 +158,94 @@ def local_export(args):
             cleanup(args)
 
 
+def export_to_s3_recursive(minioClient, args, conf):
+    """S3 export routine"""
+    fileHash = {}
+    for root, dirs, files in os.walk(conf.dir, topdown=False):
+        relpath = os.path.relpath(root, conf.dir)
+        logging.info('Root dir %s, Conf dir %s, relpath: %s', root, conf.dir, relpath)
+        for name in files:
+            fullpath = os.path.join(root, name)
+            fileHash[fullpath] = 1
+            key = os.path.join(relpath, name)
+            logging.info('Full path %s, relpath (with file) %s', fullpath, key)
+            moddate = os.stat(fullpath)[8]
+            if fullpath not in conf.fileTimes or conf.fileTimes[fullpath] != moddate:
+                minioClient.fput_object(
+                    conf.s3bucket,
+                    key.lstrip('./'),
+                    fullpath,
+                    metadata={
+                        'x-amz-meta-nodename': args.nodename,
+                        'x-amz-meta-nodeip': args.nodeip,
+                        'x-amz-meta-podname': args.podname,
+                        'x-amz-meta-podip': args.podip,
+                        'x-amz-meta-podservice': args.podservice,
+                        'x-amz-meta-podns': args.podns,
+                        'x-amz-meta-poduuid': args.poduuid,
+                    },
+                )
+                conf.fileTimes[fullpath] = moddate
+                logging.info('Uploaded trace %s', fullpath)
+            now = datetime.now(timezone.utc)
+            modified = datetime.fromtimestamp(moddate, tz=timezone.utc)
+            if modified < (now - timedelta(days=1, minutes=20)):
+                os.remove(fullpath)
+                logging.info('Removing trace %s', fullpath)
+                conf.fileTimes.pop(fullpath, None)
+        for d in dirs:
+            fulldir = os.path.join(root, d)
+            if os.path.realpath(fulldir) == os.path.realpath(conf.dir):
+                continue
+            dirmoddate = os.stat(fulldir)[8]
+            now = datetime.now(timezone.utc)
+            dirmodified = datetime.fromtimestamp(dirmoddate, tz=timezone.utc)
+            logging.info('Dir %s list dir len: %d', fulldir, len(os.listdir(fulldir)))
+            if len(os.listdir(fulldir)) == 0 and dirmodified < (now - timedelta(days=1, minutes=20)):
+                logging.info('Removing empty dir %s', fulldir)
+                os.rmdir(fulldir)
+
+    for key in list(conf.fileTimes):
+        if key not in fileHash:
+            conf.fileTimes.pop(key, None)
+
+
+def export_to_s3_single(minioClient, args, conf):
+    traces = [f for f in files(conf.dir)]
+    traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+    # Upload complete traces, exclude most recent log
+    for trace in traces[:-1]:
+        dirStr = get_directory(args, trace)
+        minioClient.fput_object(
+            conf.s3bucket,
+            '%s/%s.%s.sf' % (dirStr, os.path.basename(trace), args.nodeip),
+            trace,
+            metadata={
+                'x-amz-meta-nodename': args.nodename,
+                'x-amz-meta-nodeip': args.nodeip,
+                'x-amz-meta-podname': args.podname,
+                'x-amz-meta-podip': args.podip,
+                'x-amz-meta-podservice': args.podservice,
+                'x-amz-meta-podns': args.podns,
+                'x-amz-meta-poduuid': args.poduuid,
+            },
+        )
+        os.remove(trace)
+        logging.info('Uploaded trace %s', trace)
+        if conf.mode == CONT_UPDATE and len(traces) > 0:
+            # Upload partial trace without removing it
+            tr = traces[-1]
+            moddate = os.stat(tr)[8]
+            if tr in conf.fileTimes and moddate == conf.fileTimes[tr]:
+                continue
+            else:
+                conf.fileTimes = {tr: moddate}
+                minioClient.fput_object(
+                    conf.s3bucket, os.path.basename(tr), tr, metadata={'X-Amz-Meta-Trace': 'partial'}
+                )
+                logging.info('Uploaded partial trace %s', tr)
+
+
 def export_to_s3(args):
     """S3 export routine"""
     # Retrieve s3  access and secret keys
@@ -161,7 +268,7 @@ def export_to_s3(args):
                 minioClient.make_bucket(conf.s3bucket, location=args.s3location)
         except MaxRetryError:
             logging.error('Connection timeout! Removing traces older than %d minutes', args.agemin)
-            cleanup(args)
+            cleanup_s3(args, conf)
             pass
         except InvalidResponseError:
             logging.error('Caught exception while checking and creating object store bucket')
@@ -171,39 +278,12 @@ def export_to_s3(args):
         else:
             # Upload traces to the server
             try:
-                traces = [f for f in files(conf.dir)]
-                traces.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-                # Upload complete traces, exclude most recent log
-                for trace in traces[:-1]:
-                    dirStr = get_directory(args, trace)
-                    minioClient.fput_object(
-                        conf.s3bucket,
-                        '%s/%s.%s.sf' % (dirStr, os.path.basename(trace), args.nodeip),
-                        trace,
-                        metadata={
-                            'x-amz-meta-nodename': args.nodename,
-                            'x-amz-meta-nodeip': args.nodeip,
-                            'x-amz-meta-podname': args.podname,
-                            'x-amz-meta-podip': args.podip,
-                            'x-amz-meta-podservice': args.podservice,
-                            'x-amz-meta-podns': args.podns,
-                            'x-amz-meta-poduuid': args.poduuid,
-                        },
-                    )
-                    os.remove(trace)
-                    logging.info('Uploaded trace %s', trace)
-                if conf.mode == CONT_UPDATE and len(traces) > 0:
-                    # Upload partial trace without removing it
-                    tr = traces[-1]
-                    moddate = os.stat(tr)[8]
-                    if tr in conf.fileTimes and moddate == conf.fileTimes[tr]:
-                        continue
-                    else:
-                        conf.fileTimes = {tr: moddate}
-                    minioClient.fput_object(
-                        conf.s3bucket, os.path.basename(tr), tr, metadata={'X-Amz-Meta-Trace': 'partial'}
-                    )
-                    logging.info('Uploaded partial trace %s', tr)
+                if conf.mode == MOVE_DEL or conf.mode == CONT_UPDATE:
+                    export_to_s3_single(minioClient, args, conf)
+                elif conf.mode == CONT_UPDATE_RECURSIVE:
+                    export_to_s3_recursive(minioClient, args, conf)
+                else:
+                    logging.warn('Mode: %s not supported', conf.mode)
             except InvalidResponseError:
                 logging.error('Caught exception while uploading traces to object store')
             except S3Error as exc:
@@ -277,10 +357,10 @@ def verify_args(args):
         confs = []
         for d in dirs:
             s3Conf = S3DataConf(d.strip(), buckets[i].strip(), modes[i].strip())
-            if s3Conf.mode != MOVE_DEL and s3Conf.mode != CONT_UPDATE:
+            if s3Conf.mode != MOVE_DEL and s3Conf.mode != CONT_UPDATE and s3Conf.mode != CONT_UPDATE_RECURSIVE:
                 logging.error(
-                    'S3 export mode must be set to {0} or {1}. Mode: {2} is not an option'.format(
-                        MOVE_DEL, CONT_UPDATE, s3Conf.mode
+                    'S3 export mode must be set to {0}, {1}, or {2}. Mode: {3} is not an option'.format(
+                        MOVE_DEL, CONT_UPDATE, CONT_UPDATE_RECURSIVE, s3Conf.mode
                     )
                 )
                 sys.exit(1)
@@ -313,8 +393,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--mode',
-        help='copy modes ({0}, {1}) comma delimited. number must match buckets, data dirs'.format(
-            MOVE_DEL, CONT_UPDATE
+        help='copy modes ({0}, {1}, {2}) comma delimited. number must match buckets, data dirs'.format(
+            MOVE_DEL, CONT_UPDATE, CONT_UPDATE_RECURSIVE
         ),
         default=MOVE_DEL,
     )
