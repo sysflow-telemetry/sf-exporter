@@ -27,7 +27,7 @@
 
 import logging, argparse, sys, os, time
 import shutil
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from time import strftime, gmtime
 from executor import PeriodicExecutor
 from pathlib import Path
