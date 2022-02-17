@@ -82,7 +82,7 @@ def cleanup(args):
             c = t.st_ctime
             # delete file if older than agemin
             if c < cutoff:
-                logging.warn('Trace \'%s\' removed before being uploaded to object store', f)
+                logging.warning('Trace \'%s\' removed before being uploaded to object store', f)
                 os.remove(f)
 
 
@@ -98,7 +98,7 @@ def cleanup_s3(args, conf):
             c = t.st_ctime
             # delete file if older than agemin
             if c < cutoff:
-                logging.warn('Trace \'%s\' removed before being uploaded to object store', fullpath)
+                logging.warning('Trace \'%s\' removed before being uploaded to object store', fullpath)
                 os.remove(fullpath)
 
 
@@ -186,7 +186,7 @@ def export_to_s3_recursive(minioClient, args, conf):
                     },
                 )
                 conf.fileTimes[fullpath] = moddate
-                logging.info('Uploaded trace %s', fullpath)
+                logging.debug('Uploaded trace %s', fullpath)
             now = datetime.now()
             modified = datetime.fromtimestamp(moddate)
             daylater = modified + timedelta(days=1)
@@ -288,7 +288,7 @@ def export_to_s3(args):
                 elif conf.mode == CONT_UPDATE_RECURSIVE:
                     export_to_s3_recursive(minioClient, args, conf)
                 else:
-                    logging.warn('Mode: %s not supported', conf.mode)
+                    logging.warning('Mode: %s not supported', conf.mode)
             except InvalidResponseError:
                 logging.error('Caught exception while uploading traces to object store')
             except S3Error as exc:
@@ -394,6 +394,9 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', help='connection timeout', type=float, default=5)
     parser.add_argument('--agemin', help='age in minutes to keep in case of repeated timeouts', type=float, default=60)
     parser.add_argument(
+        '--log', help='logging level for exporter: DEBUG, INFO, WARNING, ERROR, CRITICAL', default='INFO'
+    )
+    parser.add_argument(
         '--dir', help='data directory(s) comma delimited. number must match s3buckets', default='/mnt/data'
     )
     parser.add_argument(
@@ -416,8 +419,19 @@ if __name__ == '__main__':
     # parse args and configuration
     args = parser.parse_args()
 
+    logLevelErr = False
+    numLevel = getattr(logging, args.log.upper(), None)
+    if not isinstance(numLevel, int):
+        logLevelErr = True
+        numLevel = logging.INFO
+
     # setup logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s]\t%(message)s')
+    logging.basicConfig(level=numLevel, format='%(asctime)s [%(levelname)s]\t%(message)s')
+    if logLevelErr:
+        logging.warning(
+            'Logging level %s, is not valid. Must be: DEBUG, INFO, WARNING, ERROR, or CRITICAL. Defaulting to INFO',
+            args.log.upper(),
+        )
     logging.addLevelName(level=HEALTH, levelName='HEALTH')
     logging.info('Read configuration from \'%s\'; logging to \'%s\'' % ('stdin', 'stdout'))
     conf = verify_args(args)
