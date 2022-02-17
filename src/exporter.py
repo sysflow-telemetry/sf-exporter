@@ -163,12 +163,12 @@ def export_to_s3_recursive(minioClient, args, conf):
     fileHash = {}
     for root, dirs, files in os.walk(conf.dir, topdown=False):
         relpath = os.path.relpath(root, conf.dir)
-        logging.info('Root dir %s, Conf dir %s, relpath: %s', root, conf.dir, relpath)
+        logging.debug('Root dir %s, Conf dir %s, relpath: %s', root, conf.dir, relpath)
         for name in files:
             fullpath = os.path.join(root, name)
             fileHash[fullpath] = 1
             key = os.path.join(relpath, name)
-            logging.info('Full path %s, relpath (with file) %s', fullpath, key)
+            logging.debug('Full path %s, relpath (with file) %s', fullpath, key)
             moddate = os.stat(fullpath)[8]
             if fullpath not in conf.fileTimes or conf.fileTimes[fullpath] != moddate:
                 minioClient.fput_object(
@@ -187,9 +187,11 @@ def export_to_s3_recursive(minioClient, args, conf):
                 )
                 conf.fileTimes[fullpath] = moddate
                 logging.info('Uploaded trace %s', fullpath)
-            now = datetime.now(timezone.utc)
-            modified = datetime.fromtimestamp(moddate, tz=timezone.utc)
-            if modified < (now - timedelta(days=1, minutes=20)):
+            now = datetime.now()
+            modified = datetime.fromtimestamp(moddate)
+            daylater = modified + timedelta(days=1)
+            expireTime = daylater.replace(hour=1, minute=0, second=0)
+            if now > expireTime:
                 os.remove(fullpath)
                 logging.info('Removing trace %s', fullpath)
                 conf.fileTimes.pop(fullpath, None)
@@ -198,10 +200,13 @@ def export_to_s3_recursive(minioClient, args, conf):
             if os.path.realpath(fulldir) == os.path.realpath(conf.dir):
                 continue
             dirmoddate = os.stat(fulldir)[8]
-            now = datetime.now(timezone.utc)
-            dirmodified = datetime.fromtimestamp(dirmoddate, tz=timezone.utc)
-            logging.info('Dir %s list dir len: %d', fulldir, len(os.listdir(fulldir)))
-            if len(os.listdir(fulldir)) == 0 and dirmodified < (now - timedelta(days=1, minutes=20)):
+            now = datetime.now()
+            dirmodified = datetime.fromtimestamp(dirmoddate)
+            daylater = dirmodified + timedelta(days=1)
+            expireTime = daylater.replace(hour=1, minute=0, second=0)
+
+            logging.debug('Dir %s list dir len: %d', fulldir, len(os.listdir(fulldir)))
+            if len(os.listdir(fulldir)) == 0 and now > expireTime:
                 logging.info('Removing empty dir %s', fulldir)
                 os.rmdir(fulldir)
 
