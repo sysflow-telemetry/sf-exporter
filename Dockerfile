@@ -124,5 +124,8 @@ ENV S3_PREFIX=$s3prefix
 ARG mode=move-del
 ENV MODE=$mode
 
+ARG log=INFO
+ENV LOG=$log
+
 # entrypoint
-CMD python3 ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR --clusterid=$CLUSTER_ID --s3prefix=$S3_PREFIX --mode=$MODE
+CMD python3 ./exporter.py --exporttype=$EXPORT_TYPE --s3endpoint=$S3_ENDPOINT --s3port=$S3_PORT --secure=$SECURE --scaninterval=$INTERVAL --dir=$DIR --s3bucket=$S3_BUCKET --s3location=$S3_LOCATION --nodename=$EXPORTER_ID --nodeip=$NODE_IP --podname=$POD_NAME --podns=$POD_NAMESPACE --podip=$POD_IP --podservice=$POD_SERVICE_ACCOUNT --poduuid=$POD_UUID --todir=$TO_DIR --clusterid=$CLUSTER_ID --s3prefix=$S3_PREFIX --mode=$MODE --log=$LOG
