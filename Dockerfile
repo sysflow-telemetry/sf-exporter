@@ -57,7 +57,7 @@ COPY src/executor.py .
 COPY src/exporter.py .
 
 # dependencies
-COPY src/requirements.txt /tmp/build
+COPY src/requirements.txt /tmp/build/requirements.txt
 RUN cd /tmp/build && python3 -m pip install -r requirements.txt && rm -r /tmp/build
 
 # environment variables
