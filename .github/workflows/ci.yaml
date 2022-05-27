@@ -6,7 +6,7 @@ on:
       - master
       - dev
     tags:
-      - '*'     
+      - '*'
   pull_request:
     branches:
       - master
@@ -20,9 +20,9 @@ on:
       - unlocked
       - review_requested
   workflow_dispatch:
-    
+
 env:
-  DOCKER_REGISTRY_REPOSITORY: sysflowtelemetry/sf-exporter  
+  DOCKER_REGISTRY_REPOSITORY: sysflowtelemetry/sf-exporter
 
 jobs:
   lint:
@@ -33,11 +33,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'      
+          python-version: '3.x'
       - name: Install requirements
         run: |
-          python -m pip install --upgrade pip          
-          python -m pip install black==21.6b0 unimport==0.8.3 safety bandit        
+          python -m pip install --upgrade pip
+          python -m pip install black==22.3 unimport==0.9.5 safety bandit
       - name: Check style
         run: black --check -S -l 120 src/
       - name: Check imports
@@ -52,22 +52,22 @@ jobs:
     permissions:
       contents: read
       packages: write
-    steps:      
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          submodules: true      
+          submodules: true
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
-        with:          
+        with:
           images: |
             ${{ env.DOCKER_REGISTRY_REPOSITORY }}
             ghcr.io/${{ github.repository }}
-          tags: |            
+          tags: |
             type=edge,branch=master
             type=ref,event=branch
-            type=ref,event=tag            
+            type=ref,event=tag
             type=ref,event=pr
           labels: |
             org.opencontainers.image.documentation=https://sysflow.readthedocs.io/
@@ -77,33 +77,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         if: ${{ github.event_name != 'pull_request' }}
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}   
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set build args
         id: args
         shell: bash
         run: |
           echo "##[set-output name=ubi_version;]$(awk -F'=' '/UBI_VERSION/{print $2}' makefile.manifest.inc)"
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/*/})"
-          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"     
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - name: Build and push
-        id: docker_build        
-        uses: docker/build-push-action@v2        
+        id: docker_build
+        uses: docker/build-push-action@v2
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          build-args: |            
+          build-args: |
             VERSION=${{ steps.args.outputs.branch }}
             RELEASE=${{ steps.args.outputs.sha_short }}
             UBI_VER=${{ steps.args.outputs.ubi_version }}
@@ -115,36 +115,35 @@ jobs:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           destination_container_repo: ${{ env.DOCKER_REGISTRY_REPOSITORY }}
-          provider: dockerhub          
-          readme_file: "README.md"      
+          provider: dockerhub
+          readme_file: "README.md"
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
-  release:    
-    needs: [docker]    
+  release:
+    needs: [docker]
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     permissions:
-      contents: write      
-    steps:      
+      contents: write
+    steps:
       - name: Checkout
-        uses: actions/checkout@v2                 
+        uses: actions/checkout@v2
       - name: Get version from tag
         id: tag_name
         shell: bash
-        run: |          
-          GHREF=${GITHUB_REF#refs/tags/}; echo ::set-output name=current_version::${GHREF%-*}           
-          echo ::set-output name=current_tag::${GITHUB_REF#refs/tags/}                       
+        run: |
+          GHREF=${GITHUB_REF#refs/tags/}; echo ::set-output name=current_version::${GHREF%-*}
+          echo ::set-output name=current_tag::${GITHUB_REF#refs/tags/}
       - name: Get Changelog Entry
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2
-        with:          
-          version: ${{ steps.tag_name.outputs.current_version }}
-          path: ./CHANGELOG.md      
-      - name: Release
-        uses: softprops/action-gh-release@v1        
         with:
-          body: ${{ steps.changelog_reader.outputs.changes }}          
-          token: ${{ secrets.GITHUB_TOKEN }}          
+          version: ${{ steps.tag_name.outputs.current_version }}
+          path: ./CHANGELOG.md
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog_reader.outputs.changes }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: contains(steps.tag_name.outputs.current_version, '-rc')
           draft: true
-          
