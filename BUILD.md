@@ -6,13 +6,13 @@ SysFlow exporter to export SysFlow traces to S3-compliant object stores.
 
 ## Build
 
-This document describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container 
+This document describes how to build and run the application both inside a docker container and on a Linux host. Building and running the application inside a docker container
 is the easiest way to start. For convenience, skip the build step and pull pre-built images directly from Docker Hub.
 
 To build the project, first clone the source code, with submodules:
 
 ```bash
-git clone --recursive git@github.com:sysflow-telemetry/sf-exporter.git 
+git clone --recursive git@github.com:sysflow-telemetry/sf-exporter.git
 ```
 
 To checkout submodules on an already cloned repo:
@@ -24,7 +24,7 @@ git submodule update --init --recursive
 To build the docker image for the exporter locally, run:
 
 ```bash
-docker build -t sf-exporter . 
+docker build -t sf-exporter .
 ```
 
 ## Docker usage
@@ -38,7 +38,7 @@ docker run -d --rm --name sf-exporter \
     -e S3_ACCESS_KEY=<access_key> \
     -e S3_SECRET_KEY=<secret_key> \
     -e NODE_IP=$HOSTNAME \
-    -e INTERVAL=150 \ 
+    -e INTERVAL=150 \
     -v /mnt/data:/mnt/data \
     sysflowtelemetry/sf-exporter
 ```
@@ -71,18 +71,14 @@ To run the exporter from the command line:
 ```bash
 ./exporter.py -h
 usage: exporter.py [-h] [--exporttype {s3,local}] [--s3endpoint S3ENDPOINT]
-                   [--s3port S3PORT] [--s3accesskey S3ACCESSKEY]
-                   [--s3secretkey S3SECRETKEY] [--s3bucket S3BUCKET]
-                   [--s3location S3LOCATION] [--s3prefix S3PREFIX]
-                   [--secure [SECURE]] [--scaninterval SCANINTERVAL]
-                   [--timeout TIMEOUT] [--agemin AGEMIN] [--dir DIR]
-                   [--todir TODIR] [--nodename NODENAME] [--nodeip NODEIP]
-                   [--podname PODNAME] [--podip PODIP]
-                   [--podservice PODSERVICE] [--podns PODNS]
-                   [--poduuid PODUUID] [--clusterid CLUSTERID]
+                        [--s3port S3PORT] [--s3accesskey S3ACCESSKEY] [--s3secretkey S3SECRETKEY]
+                        [--s3bucket S3BUCKET] [--s3location S3LOCATION] [--s3prefix S3PREFIX]
+                        [--secure [SECURE]] [--scaninterval SCANINTERVAL] [--timeout TIMEOUT]
+                        [--agemin AGEMIN] [--log LOG] [--dir DIR] [--mode MODE] [--todir TODIR]
+                        [--nodename NODENAME] [--nodeip NODEIP] [--podname PODNAME] [--podip PODIP]
+                        [--podservice PODSERVICE] [--podns PODNS] [--poduuid PODUUID] [--clusterid CLUSTERID]
 
-sf-exporter: service for watching and uploading monitoring files to object
-store.
+sf-exporter: watches and uploads monitoring files to object store.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -95,17 +91,18 @@ optional arguments:
                         s3 access key
   --s3secretkey S3SECRETKEY
                         s3 secret key
-  --s3bucket S3BUCKET   target data bucket
+  --s3bucket S3BUCKET   target data bucket(s) comma delimited. number must match data dirs
   --s3location S3LOCATION
                         target data bucket location
-  --s3prefix S3PREFIX   exporter's: static prefix directory for s3 bucket
-  --secure [SECURE]     indicates if SSL connection
+  --s3prefix S3PREFIX   s3 bucket prefix
+  --secure [SECURE]     enables SSL connection
   --scaninterval SCANINTERVAL
                         interval between scans
   --timeout TIMEOUT     connection timeout
-  --agemin AGEMIN       number of minutes of traces to preserve in case of
-                        repeated timeouts
-  --dir DIR             data directory
+  --agemin AGEMIN       age in minutes to keep in case of repeated timeouts
+  --log LOG             logging level for exporter: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  --dir DIR             data directory(s) comma delimited. number must match s3buckets
+  --mode MODE           copy modes (move-del, cont-update, cont-update-recur) comma delimited. number must match buckets, data dirs
   --todir TODIR         data directory
   --nodename NODENAME   exporter's node name
   --nodeip NODEIP       exporter's node IP
