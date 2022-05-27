@@ -15,6 +15,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2022-05-26
+
+### Changed
+
+- Bumped UBI version to 8.6-754
+
 ## [0.4.0] - 2022-02-18
 
 ### Added
@@ -127,8 +133,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 - First release candidate.
 
-[Unreleased]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.4.0-rc1...HEAD
-[0.4.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.1...0.4.0-rc1
+[Unreleased]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.4.0...0.4.1
+[0.4.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.2...0.3.0
 [0.2.2]: https://github.com/sysflow-telemetry/sf-exporter/compare/0.2.1...0.2.2
