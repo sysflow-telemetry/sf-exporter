@@ -46,7 +46,7 @@ RUN dnf install -y --disableplugin=subscription-manager \
         python38-devel \
         python38-wheel && \
     mkdir -p /usr/local/lib/python3.8/site-packages && \
-    ln -s /usr/bin/python3 /usr/bin/python && \    
+    ln -s /usr/bin/python3 /usr/bin/python && \
     dnf -y clean all && rm -rf /var/cache/dnf
 
 # working directory
@@ -55,14 +55,10 @@ WORKDIR /usr/local/exporter
 # sources
 COPY src/executor.py .
 COPY src/exporter.py .
-COPY modules/sysflow/py3 /tmp/build/sfmod
 
 # dependencies
 COPY src/requirements.txt /tmp/build
-RUN cd /tmp/build && python3 -m pip install -r requirements.txt && \
-    cd sfmod && \ 
-    python3 -m pip install . && \
-    rm -r /tmp/build
+RUN cd /tmp/build && python3 -m pip install -r requirements.txt && rm -r /tmp/build
 
 # environment variables
 ENV TZ=UTC
