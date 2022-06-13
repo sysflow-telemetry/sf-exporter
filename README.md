@@ -6,23 +6,23 @@
 
 # Supported tags and respective `Dockerfile` links
 
--	[`0.4.0`, `latest`](https://github.com/sysflow-telemetry/sf-exporter/blob/0.4.0/Dockerfile), [`edge`](https://github.com/sysflow-telemetry/sf-exporter/blob/master/Dockerfile), [`dev`](https://github.com/sysflow-telemetry/sf-exporter/blob/dev/Dockerfile)
+-	[`0.4.2`, `latest`](https://github.com/sysflow-telemetry/sf-exporter/blob/0.4.2/Dockerfile), [`edge`](https://github.com/sysflow-telemetry/sf-exporter/blob/master/Dockerfile), [`dev`](https://github.com/sysflow-telemetry/sf-exporter/blob/dev/Dockerfile)
 
 # Quick reference
 
--	**Documentation**:  
+-	**Documentation**:
 	[the SysFlow Documentation](https://sysflow.readthedocs.io)
-  
--	**Where to get help**:  
+
+-	**Where to get help**:
 	[the SysFlow Community Slack](https://join.slack.com/t/sysflow-telemetry/shared_invite/enQtODA5OTA3NjE0MTAzLTlkMGJlZDQzYTc3MzhjMzUwNDExNmYyNWY0NWIwODNjYmRhYWEwNGU0ZmFkNGQ2NzVmYjYxMWFjYTM1MzA5YWQ)
 
--	**Where to file issues**:  
+-	**Where to file issues**:
 	[the github issue tracker](https://github.com/sysflow-telemetry/sysflow/issues) (include the `sf-exporter` tag)
 
--	**Source of this description**:  
+-	**Source of this description**:
 	[repo's readme](https://github.com/sysflow-telemetry/sf-exporter/edit/master/README.md) ([history](https://github.com/sysflow-telemetry/sf-exporter/commits/master))
 
--	**Docker images**:  
+-	**Docker images**:
 	[docker hub](https://hub.docker.com/u/sysflowtelemetry) | [GHCR](https://github.com/orgs/sysflow-telemetry/packages)
 
 # What is SysFlow?
@@ -53,7 +53,7 @@ docker run -d --rm --name sf-exporter \
     -e S3_ACCESS_KEY=<access_key> \
     -e S3_SECRET_KEY=<secret_key> \
     -e NODE_IP=$HOSTNAME \
-    -e INTERVAL=150 \ 
+    -e INTERVAL=150 \
     -v /mnt/data:/mnt/data \
     sysflowtelemetry/sf-exporter
 ```
