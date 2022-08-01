@@ -6,6 +6,6 @@
 # Teryl Taylor <terylt@ibm.com>
 #
 
-SYSFLOW_VERSION?=0.4.3
+SYSFLOW_VERSION?=0.4.4
 SYSFLOW_BUILD_NUMBER?=1
 UBI_VERSION=8.6-855
