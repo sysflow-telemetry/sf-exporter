@@ -262,7 +262,7 @@ def export_to_s3(args):
         '%s:%s' % (args.s3endpoint, args.s3port),
         access_key=access_key,
         secret_key=secret_key,
-        region=args.s3location, #adding region where the S3 bucket is present
+        region=args.s3location,
         secure=args.secure,
     )
     minioClient._http.connection_pool_kw['timeout'] = Timeout(connect=args.timeout, read=3 * args.timeout)
@@ -325,7 +325,7 @@ def run_tests(args):
             '%s:%s' % (args.s3endpoint, args.s3port),
             access_key=access_key,
             secret_key=secret_key,
-            region=args.s3location, #adding region where the S3 bucket is present
+            region=args.s3location,
             secure=args.secure,
         )
         minioClient._http.connection_pool_kw['timeout'] = Timeout(connect=args.timeout, read=3 * args.timeout)
