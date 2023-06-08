@@ -29,9 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: '3.x'
       - name: Install requirements
@@ -54,12 +54,12 @@ jobs:
       packages: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: |
             ${{ env.DOCKER_REGISTRY_REPOSITORY }}
@@ -73,17 +73,17 @@ jobs:
             org.opencontainers.image.documentation=https://sysflow.readthedocs.io/
             org.opencontainers.image.vendor=SysFlow
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name != 'pull_request' }}
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         if: ${{ github.event_name != 'pull_request' }}
         with:
           registry: ghcr.io
@@ -93,20 +93,20 @@ jobs:
         id: args
         shell: bash
         run: |
-          echo "##[set-output name=ubi_version;]$(awk -F'=' '/UBI_VERSION/{print $2}' makefile.manifest.inc)"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/*/})"
-          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+          echo "BRANCH=$(echo ${GITHUB_REF#refs/*/})" >> $GITHUB_ENV
+          echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "UBI_VERSION=$(awk -F'=' '/UBI_VERSION/{print $2}' makefile.manifest.inc)" >> $GITHUB_ENV
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           build-args: |
-            VERSION=${{ steps.args.outputs.branch }}
-            RELEASE=${{ steps.args.outputs.sha_short }}
-            UBI_VER=${{ steps.args.outputs.ubi_version }}
+            VERSION=${{ env.BRANCH }}
+            RELEASE=${{ env.SHA_SHORT }}
+            UBI_VER=${{ env.UBI_VERSION }}
       - name: push README to Dockerhub
         uses: christian-korneck/update-container-description-action@v1
         if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
@@ -127,23 +127,23 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Get version from tag
         id: tag_name
         shell: bash
         run: |
-          GHREF=${GITHUB_REF#refs/tags/}; echo ::set-output name=current_version::${GHREF%-*}
-          echo ::set-output name=current_tag::${GITHUB_REF#refs/tags/}
+          GHREF=${GITHUB_REF#refs/tags/}; echo "CURRENT_VERSION=${GHREF%%-*}" >> $GITHUB_ENV
+          echo "CURRENT_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - name: Get Changelog Entry
         id: changelog_reader
         uses: mindsers/changelog-reader-action@v2
         with:
-          version: ${{ steps.tag_name.outputs.current_version }}
+          version: ${{ env.CURRENT_VERSION }} 
           path: ./CHANGELOG.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body: ${{ steps.changelog_reader.outputs.changes }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: contains(steps.tag_name.outputs.current_version, '-rc')
+          prerelease: ( contains(env.CURRENT_VERSION, '-rc') || contains(env.CURRENT_VERSION, '-alpha') || contains(env.CURRENT_VERSION, '-beta') ) 
           draft: true
