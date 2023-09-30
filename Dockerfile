@@ -42,9 +42,9 @@ COPY ./LICENSE.md /licenses/
 # Install Python environment
 RUN dnf install -y --disableplugin=subscription-manager \
         gcc \
-        python38 \
-        python38-devel \
-        python38-wheel && \
+        python3 \
+        python3-devel \
+        python3-wheel && \
     mkdir -p /usr/local/lib/python3.8/site-packages && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     dnf -y clean all && rm -rf /var/cache/dnf
