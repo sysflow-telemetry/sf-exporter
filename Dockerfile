@@ -18,7 +18,7 @@
 # limitations under the License.
 
 ARG UBI_VER
-FROM registry.access.redhat.com/ubi8/ubi:${UBI_VER}
+FROM registry.access.redhat.com/ubi9/ubi:${UBI_VER}
 
 ARG VERSION=dev
 ARG RELEASE=dev

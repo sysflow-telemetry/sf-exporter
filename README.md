@@ -6,7 +6,7 @@
 
 # Supported tags and respective `Dockerfile` links
 
--	[`0.5.1`, `latest`](https://github.com/sysflow-telemetry/sf-exporter/blob/0.5.1/Dockerfile), [`edge`](https://github.com/sysflow-telemetry/sf-exporter/blob/master/Dockerfile), [`dev`](https://github.com/sysflow-telemetry/sf-exporter/blob/dev/Dockerfile)
+-	[`0.6.0`, `latest`](https://github.com/sysflow-telemetry/sf-exporter/blob/0.6.0/Dockerfile), [`edge`](https://github.com/sysflow-telemetry/sf-exporter/blob/master/Dockerfile), [`dev`](https://github.com/sysflow-telemetry/sf-exporter/blob/dev/Dockerfile)
 
 # Quick reference
 
