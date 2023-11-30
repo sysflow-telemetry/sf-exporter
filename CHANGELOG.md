@@ -15,11 +15,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.6.0] - 2023-09-30
+## [0.6.0] - 2023-11-28
 
 ### Changed
 
-- Bumped UBI version to 9.2-755
+- Bumped UBI version to 9.3-1361.1699548029
 
 ## [0.5.1] - 2023-06-07
 
